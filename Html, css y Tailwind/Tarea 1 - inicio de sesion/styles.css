@@ -9,9 +9,9 @@
     align-content: center;
 }
 
-@media screen and (max-width < 419px) {
+@media screen and (width < 419px) {
     .hijo{
-        background-color: aqua;
+        background-color: rgb(204, 197, 197);
         margin: auto;
         position: relative;
         width: 80%;
@@ -24,7 +24,7 @@
 
 @media screen and (width >= 420px) and (width < 768px){
     .hijo {
-            background-color: rgb(20, 61, 44);
+            background-color: #6572e3;
             margin: auto;
             position: relative;
             width: 70%;
@@ -37,7 +37,7 @@
 
 @media screen and  (width >= 768px){
     .hijo {
-            background-color: rgb(183, 197, 59);
+            background-color: #8d7e67;
             margin: auto;
             position: relative;
             width: 70%;
@@ -56,8 +56,6 @@ div.hijo {
    width: 300px;
    height: 250px;
    padding: 30px;
-   border: 3px solid #808080;
-   border-radius: 20px;
 }
 
 input.email {
