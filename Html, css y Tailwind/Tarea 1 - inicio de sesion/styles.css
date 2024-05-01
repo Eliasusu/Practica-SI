@@ -9,7 +9,7 @@
     align-content: center;
 }
 
-@media (max-width >= 419px) {
+@media screen and (max-width < 419px) {
     .hijo{
         background-color: aqua;
         margin: auto;
@@ -20,6 +20,32 @@
         border: 3px solid #808080;
         border-radius: 20px;
     } 
+}
+
+@media screen and (width >= 420px) and (width < 768px){
+    .hijo {
+            background-color: rgb(20, 61, 44);
+            margin: auto;
+            position: relative;
+            width: 70%;
+            height: 250px;
+            padding: 5px 25px 5px 25px;
+            border: 3px solid #2132cf;
+            border-radius: 20px;
+        }
+}
+
+@media screen and  (width >= 768px){
+    .hijo {
+            background-color: rgb(183, 197, 59);
+            margin: auto;
+            position: relative;
+            width: 70%;
+            height: 250px;
+            padding: 5px 25px 5px 25px;
+            border: 3px solid #cf8c21;
+            border-radius: 20px;
+        }
 }
 
 
