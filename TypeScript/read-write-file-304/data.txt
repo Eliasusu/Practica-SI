@@ -1,0 +1,5 @@
+Frieren;Elf
+Himmel;Hero
+Eisen;Duarf
+Yuji;Sorcerer
+Toji;Human

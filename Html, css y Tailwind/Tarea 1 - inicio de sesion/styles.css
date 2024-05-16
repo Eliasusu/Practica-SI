@@ -88,4 +88,5 @@ button.login-button {
     border-radius: 20px;
     padding: 10px;
     width: 154px;
+    cursor: pointer;
 }
