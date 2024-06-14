@@ -2,6 +2,8 @@ import http from 'node:http'
 import path from 'node:path'
 import {appendFile, access} from 'node:fs/promises'
 
+
+
 async function registroFecha(destino, contenido){
   try{
     const fs = await appendFile(destino, contenido);
@@ -22,38 +24,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // let archivo
-  // if (req.url === '/' || req.url === '/index' || req.url === '/index.html') {
-  //   archivo = path.join('./index.html');
-  //   } else {
-  //     archivo = path.join(req.url);
-  //   }
+  if(req.url === '/' || req.url === '/index' || req.url === '/index.html'){
+    res.writeHead(200, {'Content-Type':'text/html'})
+    res.end('Aqui deberia haber un archivo html... deberia')
+  } else {
+    res.writeHead(404, {'Content-Type':'text/plain'})
+    res.end('404 - Not Found')    
+  }
 
-  // access(archivo, (err) => {
-  //   if(!err){
-  //     const contentType = getContentType(archivo);
-  //     res.writeHead(200, {'Content-Type': contentType});
-  //     res.end('Hola')
-  //   } else {
-  //     res.writeHead(404, { 'Content-Type': 'text/plain' });
-  //     res.end('404 - Not Found');
-  //   }
-  // })
 })
 
-function getContentType(filePath) {
-    const extname = path.extname(filePath);
-    switch (extname) {
-        case '.html':
-            return 'text/html';
-        case '.js':
-            return 'text/javascript';
-        case '.css':
-            return 'text/css';
-        default:
-            return 'text/plain';
-    }
-}
+
 
 server.listen(0, () => {
   console.log(`Server corriendo en -> http://localhost:${server.address().port}`);
