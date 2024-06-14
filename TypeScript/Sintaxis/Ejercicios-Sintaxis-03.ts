@@ -9,6 +9,6 @@ let datosLocos = [124, 356, true, 'jonhCena', null];
 
 let dataType = 'string';
 
-let arrayPrueba = transformadora(datosLocos, dataType)
+let arrayPrueba2 = transformadora(datosLocos, dataType)
 
 console.log(arrayPrueba)

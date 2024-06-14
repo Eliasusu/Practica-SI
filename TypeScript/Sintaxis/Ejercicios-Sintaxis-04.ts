@@ -12,7 +12,7 @@ const ingresadora = (array, cadena) => {
     }
 }
 
-let arrayPrueba = ['uno','dos','tres','cuatro','cinco','seis'];
+let arrayPrueba1 = ['uno','dos','tres','cuatro','cinco','seis'];
 
 let cadenaPrueba = 'uno';
 
