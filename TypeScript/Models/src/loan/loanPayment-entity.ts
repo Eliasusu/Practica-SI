@@ -1,4 +1,4 @@
-import { generateUid } from "../common/uid";
+// Purpose: Contains the LoanPayment entity class.
 import { Loan } from "./loan.entity";
 import { Payment } from "./payment.entity";
 
