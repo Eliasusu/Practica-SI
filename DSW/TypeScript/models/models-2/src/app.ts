@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express'
 import { Character } from './character/character.entity.js'
-import { it } from 'node:test'
+
 
 const app = express()
 app.use(express.json())
