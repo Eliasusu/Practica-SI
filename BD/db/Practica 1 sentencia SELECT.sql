@@ -79,3 +79,34 @@ order by fecha_solicitud asc;
 select * from antecedentes
 where fecha_hasta is null
 order by fecha_desde;
+
+-- Ejercicio 10
+-- Mostrar aquellos antecedentes laborales que finalizaron y cuya fecha hasta no esté entre junio del 2013 a diciembre de 2013, ordenados por número de DNI del empleado.
+
+select * from antecedentes
+where fecha_hasta is not null and fecha_hasta not between '2013-06-01' and '2013-12-31'
+order by dni asc;
+
+-- Ejercicio 11
+-- Mostrar los contratos cuyo salario sea mayor que 2000 y trabajen en las empresas 30-10504876-5 o 30-21098732-4.Rotule el encabezado: 
+
+select nro_contrato, dni, sueldo, cuit from contratos
+where sueldo > 2000 and cuit in ('30-10504876-5', '30-21098732-4');
+
+-- Ejercicio 12
+-- Mostrar los títulos técnicos.
+
+select * from titulos
+where desc_titulo like '%Tecnico%';
+
+-- Ejercicio 13
+-- Seleccionar las solicitudes cuya fecha sea mayor que ‘21/09/2013’ y el código de cargo sea 6;  o hayan solicitado aspirantes de sexo femenino
+
+select * from solicitudes_empresas
+where (fecha_solicitud > '2013-09-21' and cod_cargo = 6) or sexo like '%F%';
+
+-- Ejercicio 14
+-- Seleccionar los contratos con un salario pactado mayor que 2000 y que no hayan sido terminado.
+
+select * from contratos
+where sueldo > 2000 and fecha_caducidad is null;
