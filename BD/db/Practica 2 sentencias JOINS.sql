@@ -64,3 +64,52 @@ WHERE persona_referencia = 'Armando Esteban Quito' OR persona_referencia = 'Feli
 SELECT DISTINCT CONCAT(apellido, ', ', nombre, ' tiene como referencia a ', persona_referencia, ' cuando trabajó en ', razon_social)
 FROM tabla_temporal tt JOIN contratos c JOIN empresas e
 ON tt.dni = c.dni_persona AND c.cuit = e.cuit_empresa;
+
+-- Ejercicio 7 🕛
+-- Seleccionar para la empresa Viejos amigos, fechas de solicitudes, descripción del cargo solicitado y 
+-- edad máxima  y mínima . Si no tiene edad mínima y máxima indicar “sin especificar”. 
+-- Encabezado:
+-- Empresa | Fecha de Solicitud | Cargo Solicitado | Edad Mínima | Edad Máxima
+
+SELECT 
+    razon_social as 'Empresa', fecha_solicitud as 'Fecha de Solicitud', 
+    desc_cargo as 'Cargo Solicitado',
+    CASE  
+        WHEN edad_minima IS NULL THEN 'Sin especificar'
+        ELSE edad_minima
+        END as 'Edad Mínima',
+    CASE
+        WHEN edad_maxima IS NULL THEN 'Sin especificar'
+        ELSE edad_maxima
+        END as 'Edad Máxima'
+FROM    
+    solicitudes_empresas s INNER JOIN empresas e INNER JOIN cargos c
+ON 
+    s.cuit = e.cuit_empresa AND s.cod_cargo = c.cod
+WHERE 
+    razon_social = 'Viejos Amigos';
+
+-- Ejercicio 8 🕛
+-- Mostrar los antecedentes de cada postulante:
+-- Postulante(nombre y apellido) | Cargo(descripcion del cargo)
+
+SELECT 
+    CONCAT(nombre, ' ', apellido) as 'Postulante', desc_cargo as 'Cargo'
+FROM 
+    antecedentes a INNER JOIN personas p INNER JOIN cargos c
+ON 
+    a.dni_persona = p.dni AND a.cod_cargo = c.cod;
+
+-- Ejercicio 9 🕛
+-- Mostrar todas las evaluaciones realizadas para cada solicitud ordenar en forma ascendente por empresa y 
+-- descendente por cargo:
+-- Empresa | Cargo | Desc Evaluacion | Resultado
+
+SELECT 
+    razon_social as 'Empresa', desc_cargo as 'Cargo', desc_evaluacion as 'Desc Evaluacion', resultado as 'Resultado'
+FROM
+    entrevistas e INNER JOIN entrevistas_evaluaciones ee INNER JOIN evaluaciones ev INNER JOIN empresas em INNER JOIN cargos c
+ON 
+    e.nro_entrevista = ee.nro_entrevista AND ee.cod_evaluacion = ev.cod AND e.cuit = em.cuit_empresa AND e.cod_cargo = c.cod
+ORDER BY
+    razon_social ASC, desc_cargo DESC;
