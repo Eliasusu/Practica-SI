@@ -140,14 +140,41 @@ FROM
 -- Mostrar para todas las solicitudes la razón social de la empresa solicitante,
 -- el cargo y si se hubiese realizado un contrato los datos de la(s) persona(s).
 
--- Comentarios 💬
--- Me trae una instancia de mas ya que tiene dos contratos la misma persona, uno que finalizo y otro que no
+
+-- Comentario 💬
+-- Me trae una instancia de más de la persona, pero no se como solucionarlo
 
 SELECT 
-    e.cuit, razon_social, desc_cargo, ifnull(nombre, 'Sin contrato'), ifnull(apellido, 'Sin contrato'), ifnull(dni, 'Sin contrato')
-FROM 
+    e.cuit, razon_social, desc_cargo, ifnull(dni_persona,'Sin contrato'), ifnull(nombre,'Sin contrato'), ifnull(apellido,'Sin contrato')
+FROM
     solicitudes_empresas s
-    LEFT JOIN empresas e ON s.cuit = e.cuit
     LEFT JOIN contratos co ON s.fecha_solicitud = co.fecha_solicitud AND s.cod_cargo = co.cod_cargo AND s.cuit = co.cuit
-    LEFT JOIN personas p ON p.dni = co.dni_persona
+    LEFT JOIN empresas e ON s.cuit = e.cuit
+    LEFT JOIN personas p ON co.dni_persona = p.dni
     LEFT JOIN cargos c ON c.cod_cargo = s.cod_cargo;
+
+-- Ejercicio 12 ✅
+-- Mostrar para todas las solicitudes la razón social de la empresa solicitante, 
+-- el cargo de las solicitudes para las cuales no se haya realizado un contrato. 
+
+SELECT 
+    e.cuit, razon_social, desc_cargo
+FROM
+    solicitudes_empresas s
+    LEFT JOIN contratos co ON s.fecha_solicitud = co.fecha_solicitud AND s.cod_cargo = co.cod_cargo AND s.cuit = co.cuit
+    LEFT JOIN empresas e ON s.cuit = e.cuit
+    LEFT JOIN cargos c ON c.cod_cargo = s.cod_cargo
+WHERE
+    co.nro_contrato IS NULL;
+
+-- Ejercicio 13 ✅
+-- Listar todos los cargos y para aquellos que hayan sido realizados (como antecedente) 
+-- por alguna persona indicar nombre y apellido de la persona y empresa donde lo ocupó.
+
+SELECT 
+    desc_cargo, nombre, apellido, razon_social
+FROM 
+    cargos c 
+    LEFT JOIN antecedentes a ON c.cod_cargo = a.cod_cargo
+    LEFT JOIN personas p ON a.dni = p.dni
+    LEFT JOIN empresas e ON a.cuit = e.cuit;
