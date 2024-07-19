@@ -178,3 +178,26 @@ FROM
     LEFT JOIN antecedentes a ON c.cod_cargo = a.cod_cargo
     LEFT JOIN personas p ON a.dni = p.dni
     LEFT JOIN empresas e ON a.cuit = e.cuit;
+
+use afatse
+
+-- Ejercicio 14 ✅
+-- Indicar todos los instructores que tengan un supervisor. Mostrar:
+-- Cuil Instructor | Nombre Instructor | Apellido Instructor | Cuil Supervisor | Nombre Supervisor | Apellido Supervisor
+
+SELECT 
+    i.cuil as 'Cuil Instructor', i.nombre as 'Nombre Instructor', i.apellido as 'Apellido Instructor',
+    s.cuil as 'Cuil Supervisor', s.nombre as 'Nombre Supervisor', s.apellido as 'Apellido Supervisor'
+FROM
+    instructores i
+    INNER JOIN instructores s ON i.cuil_supervisor = s.cuil;
+
+-- Ejercicio 15 ✅
+-- IDEM punto 14 pero para todos los instructores, si no tiene supervisor, mostrar en blanco.
+
+SELECT 
+    i.cuil as 'Cuil Instructor', i.nombre as 'Nombre Instructor', i.apellido as 'Apellido Instructor',
+    s.cuil as 'Cuil Supervisor', s.nombre as 'Nombre Supervisor', s.apellido as 'Apellido Supervisor'
+FROM
+    instructores i
+    LEFT JOIN instructores s ON i.cuil_supervisor = s.cuil
