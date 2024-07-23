@@ -56,4 +56,15 @@ FROM evaluaciones eva
 INNER JOIN entrevistas_evaluaciones ee ON eva.cod_evaluacion = ee.cod_evaluacion
 INNER JOIN entrevistas ent ON ee.nro_entrevista = ent.nro_entrevista
 GROUP BY 1,2
-ORDER BY avg(ee.resultado) asc, stddev(ee.resultado) desc ;
+ORDER BY avg(ee.resultado) asc, stddev(ee.resultado) desc;
+
+-- Ejercicio 4
+-- 
+
+-- Ejercicio 5 ✅
+-- Cuantas entrevistas fueron hechas por cada entrevistador en oct 2014
+
+SELECT ent.nombre_entrevistador, count(*) "Cantidad entrevistas"
+FROM entrevistas ent
+WHERE fecha_entrevista between "2014-10-01" and "2014-10-31"
+GROUP BY ent.nombre_entrevistador;
