@@ -1,3 +1,27 @@
+ -- Clase de teoria 24-07-2024
+
+-- COUNT: Cuenta la cantidad de registros que hay 
+
+SELECT COUNT(*)
+FROM alumnos;
+
+SELECT COUNT(c.fecha_pago)
+FROM cuotas c;
+
+-- Se pueden hacer operaciones
+SELECT COUNT(*) - COUNT(c.fecha_pago)
+FROM cuotas c;
+
+-- Mostrar cuanto pagaron las personas por cada curso
+SELECT c.dni, a.nombre, a.apellido, 
+	SUM(c.importe_pagado)
+FROM cuotas c
+INNER JOIN alumnos a ON c.dni = a.dni
+WHERE a.apellido like "a%"
+GROUP BY c.dni, a.nombre, a.apellido
+HAVING SUM(c.importe_pagado) > 300
+ORDER BY a.nombre, a.apellido;
+
 -- Practica Nro 3 HAVING 
 
 use agencia_personal;
