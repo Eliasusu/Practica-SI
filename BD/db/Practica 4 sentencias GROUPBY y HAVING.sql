@@ -101,8 +101,6 @@ GROUP BY con.nro_contrato;
 -- Mostrar la cantidad de empresas diferentes que han realizado solicitudes 
 -- y la diferencia respecto al total de solicitudes.
 
-DECLARE @total_solicitudes INT;
-
 SET @total_solicitudes = (SELECT count(*) FROM solicitudes_empresas);
 
 SELECT COUNT(DISTINCT cuit) 'Empresas diferentes', 
