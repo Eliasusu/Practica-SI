@@ -53,7 +53,7 @@ FROM entrevistas ent
 WHERE fecha_entrevista between "2014-10-01" and "2014-10-31"
 GROUP BY ent.nombre_entrevistador;
 
--- Ejercicio 6
+-- Ejercicio 6 ✅
 -- Ídem 4) pero para todos los entrevistadores. Mostrar nombre y cantidad. Ordenado por cantidad de entrevistas.
 
 SELECT ent.nombre_entrevistador, eva.cod_evaluacion ,eva.desc_evaluacion, COUNT(*) "Cantidad entrevistas",
@@ -63,8 +63,8 @@ INNER JOIN entrevistas_evaluaciones ee ON eva.cod_evaluacion = ee.cod_evaluacion
 INNER JOIN entrevistas ent ON ee.nro_entrevista = ent.nro_entrevista
 GROUP BY 1,2
 ORDER BY COUNT(*) DESC;
-
--- Ejercicio 7
+ 
+-- Ejercicio 7 ✅
 -- Ídem 6) para aquellos cuya cantidad de entrevistas por codigo de evaluacion sea myor mayor que 1. 
 -- Ordenado por nombre en forma descendente y por codigo de evalucacion en forma ascendente
 
@@ -77,7 +77,7 @@ GROUP BY 1,2
 HAVING COUNT(*) > 1
 ORDER BY COUNT(*) DESC;
 
--- Ejercicio 8
+-- Ejercicio 8 ✅
 -- Mostrar para cada contrato cantidad total de las comisiones, cantidad a pagar, cantidad pagadas.
 
 SELECT com.nro_contrato, COUNT(*) "Cantidad total comisiones", 
@@ -86,7 +86,7 @@ SELECT com.nro_contrato, COUNT(*) "Cantidad total comisiones",
     FROM comisiones com
 GROUP BY com.nro_contrato;
 
--- Ejercicio 9
+-- Ejercicio 9 ✅
 -- Mostrar para cada contrato la cantidad de comisiones, el % de comisiones pagas y el % de impagas.
 
 SELECT con.nro_contrato,COUNT(*) 'Total', 
@@ -96,8 +96,8 @@ FROM contratos con
     JOIN comisiones com ON con.nro_contrato = com.nro_contrato
 GROUP BY con.nro_contrato;
 
-
--- Ejercicio 10
+ 
+-- Ejercicio 10 ✅
 -- Mostrar la cantidad de empresas diferentes que han realizado solicitudes 
 -- y la diferencia respecto al total de solicitudes.
 
