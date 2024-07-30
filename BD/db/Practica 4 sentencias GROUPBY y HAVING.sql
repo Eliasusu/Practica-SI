@@ -32,7 +32,7 @@ INNER JOIN entrevistas ent ON ee.nro_entrevista = ent.nro_entrevista
 GROUP BY 1,2
 ORDER BY avg(ee.resultado) asc, stddev(ee.resultado) desc;
 
--- Ejercicio 4
+-- Ejercicio 4 ✅
 -- Ídem 3) pero para Angélica Doria, con promedio mayor a 71. Ordenar por código de evaluación.
 
 SELECT eva.cod_evaluacion ,eva.desc_evaluacion, ent.nombre_entrevistador, 
