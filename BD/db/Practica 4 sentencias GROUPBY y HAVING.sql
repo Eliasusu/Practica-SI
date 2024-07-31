@@ -1,3 +1,4 @@
+-- Active: 1721298484659@@127.0.0.1@3306@agencia_personal
 use agencia_personal;
 
 -- Ejercicio 1 ✅
@@ -106,3 +107,49 @@ SET @total_solicitudes = (SELECT count(*) FROM solicitudes_empresas);
 SELECT COUNT(DISTINCT cuit) 'Empresas diferentes', 
     @total_solicitudes - COUNT(DISTINCT cuit) 'Diferencia respecto al total'
 FROM solicitudes_empresas;
+
+-- Ejercicio 11 
+-- Cantidad de solicitudes por empresas
+
+SELECT e.razon_social, count(*) 'Solicitudes' 
+FROM solicitudes_empresas s
+INNER JOIN empresas e ON s.cuit = e.cuit 
+GROUP BY 1;
+
+-- Ejercicio 12
+--- Cantidad de solicitudes por empresas y cargos
+SELECT e.razon_social, count(*) 'Solicitudes', count(*) 'Cargos'
+FROM solicitudes_empresas s
+INNER JOIN empresas e ON s.cuit = e.cuit
+INNER JOIN cargos c ON s.cod_cargo = c.cod_cargo
+GROUP BY 1;
+
+-- LEFT/RIGHT JOIN
+-- Ejercicio 13
+-- Listar las empresas, indicando todos sus datos y la cantidad de personas diferentes que han 
+-- mencionado dicha empresa como antecedente laboral. Si alguna empresa NO fue mencionada como 
+-- antecedente laboral deberá indicar 0 en la cantidad de personas.
+
+SELECT e.razon_social, count(DISTINCT a.dni) 'Cantidad de personas'
+FROM empresas e
+LEFT JOIN antecedentes a ON e.cuit = a.cuit
+GROUP BY 1;
+
+-- Ejercicio 14
+-- Indicar para cada cargo la cantidad de veces que fue solicitado. 
+-- Ordenado en forma descendente por cantidad de solicitudes. Si un cargo nunca fue solicitado, mostrar 0.
+SELECT c.desc_cargo, count(s.cod_cargo)
+FROM cargos c
+LEFT JOIN solicitudes_empresas s ON c.cod_cargo = s.cod_cargo
+GROUP BY 1
+ORDER BY count(s.cod_cargo) DESC;
+
+-- Ejercicio 15
+-- Indicar los cargos que hayan sido solicitados menos de 2 veces
+
+SELECT c.desc_cargo, count(s.cod_cargo)
+FROM cargos c
+LEFT JOIN solicitudes_empresas s ON c.cod_cargo = s.cod_cargo
+GROUP BY 1
+HAVING count(s.cod_cargo) < 2
+ORDER BY count(s.cod_cargo) DESC;
