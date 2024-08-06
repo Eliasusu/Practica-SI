@@ -43,3 +43,30 @@ where DATE(s.fecha_hora_salida) = '2023-07-16' and DATE(s.fecha_hora_salida) != 
 -- Ejercicio 5
 -- Cantidad de veces que salieron las embarcaciones en el presente año indicando datos de la embarcacion
 -- datos del socio y cantidad de veces
+
+
+-- Ejercicio 6
+-- Listar los cursos que se dictarán en el futuro para los tipos de embarcaciones de tabla (contengan la palabra tabla en el nombre). 
+-- Indicar número y nombre de actividad; número, fecha de inicio y fin del curso, 
+-- código y nombre del tipo de embarcación; días y horarios de inicio y fin de dictado.
+-- Ordenar alfabéticamente por nombre de tipo de embarcación y ascendente por fecha de inicio del curso.
+
+select a.numero, a.nombre, c.numero, c.fecha_inicio, c.fecha_fin, t.codigo, t.nombre, d.dia_semana, d.hora_inicio, d.hora_fin
+from actividad a
+inner join curso c on a.numero = c.numero_actividad
+inner join dictado_curso d on c.numero = d.numero_curso
+inner join tipo_embarcacion t on a.codigo_tipo_embarcacion = t.codigo
+where t.nombre like '%tabla%' AND c.fecha_inicio > NOW()
+order by t.nombre, c.fecha_inicio asc;
+
+-- Ejercicio 7 
+-- Listar los socios con embarcaciones de tipo 'No convencional' y, si salieron con dicha embarcación este año (2024), 
+-- mostrar datos de dichas salidas. Indicar número y nombre del socio; hin, nombre y descripción de la embarcación, 
+-- fecha y hora de salida, regreso tentativo y regreso real.
+
+select so.numero, so.nombre, em.hin, em.nombre, em.descripcion, sa.fecha_hora_salida, sa.fecha_hora_regreso_tentativo, sa.fecha_hora_regreso_real
+from socio so  
+inner join embarcacion em on so.numero = em.numero_socio
+left join salida sa on em.hin = sa.hin
+where em.codigo_tipo_embarcacion = 8 and year(sa.fecha_hora_salida) = 2024;
+

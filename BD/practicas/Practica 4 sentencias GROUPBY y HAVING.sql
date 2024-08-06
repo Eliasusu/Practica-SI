@@ -6,8 +6,8 @@ use agencia_personal;
 
 SELECT sum(importe_comision) as Comisiones_Pagadas, razon_social
 FROM comisiones com
-JOIN contratos co ON com.nro_contrato = co.nro_contrato
-JOIN empresas em on co.cuit = em.cuit
+INNER JOIN contratos co ON com.nro_contrato = co.nro_contrato
+INNER JOIN empresas em on co.cuit = em.cuit
 WHERE em.razon_social = 'Traigame eso' AND fecha_pago IS NOT NULL;
 
 -- Ejercicio 2 ✅
