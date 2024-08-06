@@ -1,6 +1,5 @@
 use guarderia_gaghiel;
 
-
 -- Ejercicio 1 
 select s.hin, so.nombre
 from salida s
@@ -30,10 +29,16 @@ inner join embarcacion e on con.hin = e.hin
 inner join socio so on e.numero_socio = so.numero
 inner join cama c on con.numero_cama = c.numero
 inner join sector s on con.codigo_sector = s.codigo
-where c.estado = "Mantenimiento" and con.fecha_hora_contrato > "2023-07-01" and con.fecha_hora_contrato < "2023-07-31" ;
+where c.estado = "Mantenimiento" and con.fecha_hora_contrato > "2023-07-01" and con.fecha_hora_contrato < "2023-07-31";
 
 -- Ejercicio 4
 -- Embarcaciones que salieron el domingo pasado y no salieron el domingo anterior. Indicar datos de la embarcacion y datos del socio
+
+select s.hin, so.nombre, s.fecha_hora_salida
+from salida s 
+inner join embarcacion e on s.hin = e.hin
+inner join socio so on e.numero_socio = so.numero
+where DATE(s.fecha_hora_salida) = '2023-07-16' and DATE(s.fecha_hora_salida) != '2023-07-09';
 
 -- Ejercicio 5
 -- Cantidad de veces que salieron las embarcaciones en el presente año indicando datos de la embarcacion
