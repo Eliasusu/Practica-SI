@@ -118,11 +118,11 @@ GROUP BY 1;
 
 -- Ejercicio 12 ✅
 --- Cantidad de solicitudes por empresas y cargos
-SELECT e.razon_social, count(*) 'Solicitudes', count(*) 'Cargos'
+SELECT e.razon_social, c.cod_cargo, count(*) 'Solicitudes', count(*) 'Cargos'
 FROM solicitudes_empresas s
 INNER JOIN empresas e ON s.cuit = e.cuit
 INNER JOIN cargos c ON s.cod_cargo = c.cod_cargo
-GROUP BY 1;
+GROUP BY 1,2;
 
 -- LEFT/RIGHT JOIN
 -- Ejercicio 13 ✅
