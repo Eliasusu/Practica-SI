@@ -37,7 +37,7 @@ ORDER BY avg(ee.resultado) asc, stddev(ee.resultado) desc;
 -- Ídem 3) pero para Angélica Doria, con promedio mayor a 71. Ordenar por código de evaluación.
 
 SELECT eva.cod_evaluacion ,eva.desc_evaluacion, ent.nombre_entrevistador, 
-    avg(ee.resultado) "Promedio", stddev(ee.resultado) "Desviacion", variance(ee.resultado) "Varianza"
+    avg(ee.resultado) Promedio, stddev(ee.resultado) Desviacion, variance(ee.resultado) Varianza
 FROM evaluaciones eva
 INNER JOIN entrevistas_evaluaciones ee ON eva.cod_evaluacion = ee.cod_evaluacion
 INNER JOIN entrevistas ent ON ee.nro_entrevista = ent.nro_entrevista

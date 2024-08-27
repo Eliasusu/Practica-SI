@@ -1,3 +1,4 @@
+-- Active: 1721298484659@@127.0.0.1@3306@guarderia_gaghiel
 use guarderia_gaghiel;
 
 -- Ejercicio 1 
@@ -69,4 +70,32 @@ from socio so
 inner join embarcacion em on so.numero = em.numero_socio
 left join salida sa on em.hin = sa.hin
 where em.codigo_tipo_embarcacion = 8 and year(sa.fecha_hora_salida) = 2024;
+
+-- Ejercicio 8
+-- TEMA: VARIABLES Y TABLAS TEMPORALES
+-- Listar todos los cursos que hayan dictado la actividad: Carrera de asteroides.
+
+set @id_actividad = (select numero from actividad where nombre = "Carrera de asteroides");
+
+-- Otra forma de setear la variable ⬇️
+-- select act.numero into @id_actividad 
+-- from actividad act
+-- where act.nombre = "Carrera de asteroides";
+
+select * from curso
+where numero_actividad = @id_actividad;
+
+-- Ejercicio 9
+-- Indicar para cada embarcación, cuál ha sido la máxima fecha_hora_salida
+-- y sus fecha_hora de regreso tentativo y real. Indicar número de hin, nombre de la embarcación
+drop temporary table if exists max_salida;
+create temporary table max_salida
+select sa.hin, MAX(sa.fecha_hora_salida) fechaHoraSalida
+from salida sa
+group by sa.hin;
+
+select sa.hin, sa.fecha_hora_salida, sa.fecha_hora_regreso_tentativo, sa.fecha_hora_regreso_real
+from salida sa 
+inner join max_salida ms on sa.hin = ms.hin and sa.fecha_hora_salida = ms.fechaHoraSalida;
+
 
