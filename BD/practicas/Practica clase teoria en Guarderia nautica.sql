@@ -68,9 +68,8 @@ order by t.nombre, c.fecha_inicio asc;
 select so.numero, so.nombre, em.hin, em.nombre, em.descripcion, sa.fecha_hora_salida, sa.fecha_hora_regreso_tentativo, sa.fecha_hora_regreso_real
 from socio so  
 inner join embarcacion em on so.numero = em.numero_socio
-inner join tipo_embarcacion t_em on em.codigo_tipo_embarcacion = t_em.codigo
 left join salida sa on em.hin = sa.hin and year(sa.fecha_hora_salida) = 2024
-where t_em.nombre = 'No convencional';
+where em.codigo_tipo_embarcacion = 8;
 
 SELECT s.numero, s.nombre, emb.hin, emb.nombre, emb.descripcion, sal.
 fecha_hora_salida, sal.fecha_hora_regreso_tentativo, sal.fecha_hora_regreso_real
