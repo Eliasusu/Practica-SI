@@ -68,8 +68,20 @@ order by t.nombre, c.fecha_inicio asc;
 select so.numero, so.nombre, em.hin, em.nombre, em.descripcion, sa.fecha_hora_salida, sa.fecha_hora_regreso_tentativo, sa.fecha_hora_regreso_real
 from socio so  
 inner join embarcacion em on so.numero = em.numero_socio
-left join salida sa on em.hin = sa.hin
-where em.codigo_tipo_embarcacion = 8 and year(sa.fecha_hora_salida) = 2024;
+inner join tipo_embarcacion t_em on em.codigo_tipo_embarcacion = t_em.codigo
+left join salida sa on em.hin = sa.hin and year(sa.fecha_hora_salida) = 2024
+where t_em.nombre = 'No convencional';
+
+SELECT s.numero, s.nombre, emb.hin, emb.nombre, emb.descripcion, sal.
+fecha_hora_salida, sal.fecha_hora_regreso_tentativo, sal.fecha_hora_regreso_real
+FROM socio as s
+INNER JOIN embarcacion as emb
+ON s.numero = emb.numero_socio
+INNER JOIN tipo_embarcacion as t_emb
+ON emb.codigo_tipo_embarcacion = t_emb.codigo
+LEFT JOIN salida as sal
+ON emb.hin = sal.hin AND year(sal.fecha_hora_salida) = 2024
+WHERE t_emb.nombre = 'No convencional';
 
 -- Ejercicio 8
 -- TEMA: VARIABLES Y TABLAS TEMPORALES
