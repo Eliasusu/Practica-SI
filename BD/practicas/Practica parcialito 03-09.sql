@@ -40,7 +40,7 @@ INNER JOIN curso cur ON ins.legajo = cur.legajo_instructor
 GROUP BY 1,2
 
 -- Consulta para ver que curso hizo cada instructor y con que actividad
-SELECT act.nombre as Actividad, CONCAT(ins.nombre, ' ' ,ins.apellido) as Instructor, cur.numero as Cursos
+SELECT act.nombre as Actividad, CONCAT(ins.nombre, ' ' ,ins.apellido) as Instructor, cur.numero as Cursos, cur.fecha_fin as Fecha_Fin_Curso
 FROM curso cur
 INNER JOIN instructor ins ON cur.legajo_instructor = ins.legajo
 INNER JOIN actividad act ON cur.numero_actividad = act.numero;
@@ -67,3 +67,33 @@ FROM actividad act
 JOIN curso cur ON act.numero = cur.numero_actividad
 GROUP BY 1
 HAVING PromedioParticipantes < 10;
+
+-- Ejercicio 6
+-- Socios con pocos cursos recientes
+-- Listar todos los socios que realizaron menos de 5 cursos
+-- Indicar número y nombre del socio; cantidad de cursos de 2024, (si no realizó ningún
+-- curso este año indicar 0) y la fecha en la que se inscribió por última vez a un
+-- curso (si no se inscribió a ninguno mostrar 'sin inscripciones'). Ordenar por
+-- cantidad de cursos descendente.
+
+SELECT soc.numero, soc.nombre, IFNULL(MAX(ins.fecha_hora_inscripcion), 'Sin inscripciones') as Ultima_inscripcion, COUNT(ins.numero_curso) as Cantidad_cursos
+FROM socio soc 
+LEFT JOIN inscripcion ins ON soc.numero = ins.numero_socio 
+LEFT JOIN curso cur ON ins.numero_curso = cur.numero AND YEAR(cur.fecha_inicio) = YEAR(CURDATE())
+GROUP BY 1,2
+HAVING Cantidad_cursos < 5
+ORDER BY Cantidad_cursos DESC
+
+-- ENUNCIADO PARCIALITO
+-- Listar todos los instructores que hayan tenido menos de 4 socios inscriptos en total a los cursos que dictaron y ya terminaron. 
+-- Indicar legajo, nombre y apellido del instructor, cantidad de alumnos inscriptos (debe mostrar 0 si no hubo) 
+-- y última fecha que dictó un curso (debe mostrar 'sin cursos' en caso que no haya dictado ninguno ya finalizado). 
+-- Ordenar por cantidad de inscriptos descendente.
+
+SELECT ins.legajo as Legajo_Instructor , CONCAT(ins.nombre, ' ' ,ins.apellido) as Instructor, COUNT(insc.numero_socio) as Cantidad_Alumnos_Inscriptos, IFNULL(MAX(cur.fecha_fin), 'Sin cursos') as Ultimo_Dictado
+FROM instructor ins 
+LEFT JOIN curso cur ON ins.legajo = cur.legajo_instructor AND cur.fecha_fin < CURDATE()
+LEFT JOIN inscripcion insc ON cur.numero = insc.numero_socio
+GROUP BY 1,2
+HAVING Cantidad_Alumnos_Inscriptos < 4
+ORDER BY Cantidad_Alumnos_Inscriptos DESC;
