@@ -93,7 +93,7 @@ ORDER BY Cantidad_cursos DESC
 SELECT ins.legajo as Legajo_Instructor , CONCAT(ins.nombre, ' ' ,ins.apellido) as Instructor, COUNT(insc.numero_socio) as Cantidad_Alumnos_Inscriptos, IFNULL(MAX(cur.fecha_fin), 'Sin cursos') as Ultimo_Dictado
 FROM instructor ins 
 LEFT JOIN curso cur ON ins.legajo = cur.legajo_instructor AND cur.fecha_fin < CURDATE()
-LEFT JOIN inscripcion insc ON cur.numero = insc.numero_socio
+LEFT JOIN inscripcion insc ON cur.numero = insc.numero_curso
 GROUP BY 1,2
 HAVING Cantidad_Alumnos_Inscriptos < 4
 ORDER BY Cantidad_Alumnos_Inscriptos DESC;
