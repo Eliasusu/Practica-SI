@@ -29,10 +29,60 @@ from contratos con
 inner join personas per on con.dni_persona = per.dni
 where con.cuit = @cuitEmpresa;
 
--- Ejercicio 2 
+-- Ejercicio 2 ✅
 -- Encontrar a aquellos empleados que ganan menos que el máximo sueldo de los empleados de Viejos Amigos. 
+SET @sueldoMaximo = (
+    SELECT MAX(con.sueldo)
+    FROM contratos con 
+    INNER JOIN empresas em ON con.cuit = em.cuit AND em.razon_social = 'Viejos Amigos'
+);
 
--- Ejercicio 5 
+SELECT @sueldoMaximo;
+
+SELECT per.dni as DNI, CONCAT(per.nombre, ' ', per.apellido) as Nombre, con.sueldo as Sueldo
+FROM contratos con 
+INNER JOIN personas per ON con.dni_persona = per.dni
+WHERE Sueldo < @sueldoMaximo
+
+-- Ejercicio 3 ✅
+-- Mostrar empresas contratantes y sus promedios de comisiones pagadas o a pagar, 
+-- pero sólo de aquellas cuyo promedio supere al promedio de Tráigame eso.
+
+SET @promedioComision = (
+    SELECT AVG(com.importe_comision)
+    FROM contratos con 
+    INNER JOIN empresas em ON con.cuit = em.cuit AND em.razon_social = 'Traigame eso'
+    INNER JOIN comisiones com ON con.nro_contrato = com.nro_contrato
+);
+SELECT @promedioComision;
+
+SELECT em.cuit as Cuit, em.razon_social as Razon_Social, AVG(com.importe_comision) as Promedio_Comisiones
+FROM contratos con 
+INNER JOIN empresas em ON con.cuit = em.cuit
+INNER JOIN comisiones com ON con.nro_contrato = com.nro_contrato
+GROUP BY 1,2
+HAVING Promedio_Comisiones > @promedioComision;
+
+-- Ejercicio 4 ✅
+-- Seleccionar las comisiones pagadas que tengan un importe menor al promedio de todas las comisiones(pagas y no pagas), 
+-- mostrando razón social de la empresa contratante, mes contrato, año contrato , nro. contrato, nombre y apellido del empleado.
+
+SET @promedioDeTodasLasComisiones = (
+    SELECT AVG(com.importe_comision)
+    FROM comisiones com 
+);
+
+SELECT @promedioDeTodasLasComisiones;
+
+SELECT em.razon_social as Razon_Social, com.nro_contrato as Nro_Contrato, com.mes_contrato as Mes_Contrato, com.anio_contrato as Año_Contrato, CONCAT(per.nombre, ' ', per.apellido) as Nombre, com.importe_comision as Importe_Comision
+FROM contratos con 
+INNER JOIN empresas em ON con.cuit = em.cuit
+INNER JOIN comisiones com ON con.nro_contrato = com.nro_contrato
+INNER JOIN personas per ON con.dni_persona = per.dni
+WHERE Importe_Comision < @promedioDeTodasLasComisiones
+
+
+-- Ejercicio 5 ✅
 -- Determinar las empresas que pagaron en promedio la mayor de las comisiones.
 
 set @promedioComisiones = (
@@ -45,3 +95,13 @@ from contratos c
 inner join comisiones co on c.nro_contrato = co.nro_contrato
 inner join empresas em on c.cuit = em.cuit
 group by 1;
+
+-- Ejercicio 6
+-- Seleccionar los empleados que no tengan educación no formal o terciario.
+
+
+-- Ejercicio 7
+-- Mostrar los empleados cuyo salario supere al promedio de sueldo de la empresa que los contrató. 
+
+-- Ejercicio 8
+-- Determinar las empresas que pagaron en promedio la mayor o menor de  las comisiones
