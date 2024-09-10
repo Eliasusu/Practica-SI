@@ -1,4 +1,4 @@
--- Active: 1721298484659@@127.0.0.1@3306@agencia_personal
+-- Active: 1721298484659@@127.0.0.1@3306@afatse
 use agencia_personal;
 -- Ejercicio 1 ✅
 -- Primero hacerlo con una subconsulta y luego con variables y tabla temporal
@@ -94,14 +94,57 @@ select em.razon_social, avg(co.importe_comision) EstaPagaBien
 from contratos c
 inner join comisiones co on c.nro_contrato = co.nro_contrato
 inner join empresas em on c.cuit = em.cuit
-group by 1;
+group by 1
+having @promedioComisiones < EstaPagaBien;
 
 -- Ejercicio 6
 -- Seleccionar los empleados que no tengan educación no formal o terciario.
+drop temporary table if exists titSecUni;
+create temporary table titSecUni
+select tit.cod_titulo, tit.tipo_titulo
+from titulos tit 
+where tit.tipo_titulo = 'Educacion no formal' or tit.tipo_titulo = 'Terciario'
 
+select * from titSecUni
+
+select DISTINCT(CONCAT(per.apellido, ' ', per.nombre)) as Nombre
+from personas per 
+inner join personas_titulos pertit on per.dni = pertit.dni
+left join titSecUni tsu on pertit.cod_titulo = tsu.cod_titulo
 
 -- Ejercicio 7
 -- Mostrar los empleados cuyo salario supere al promedio de sueldo de la empresa que los contrató. 
 
+drop temporary table if exists avgSueldosPorEmp;
+create temporary table avgSueldosPorEmp
+select emp.cuit, emp.razon_social, avg(con.sueldo) as AvgSueldo
+from contratos con
+inner join empresas emp on con.cuit = emp.cuit
+group by 1,2;
+
+select * from avgSueldosPorEmp;
+
+select ase.cuit, per.dni, con.sueldo, ase.AvgSueldo
+from avgSueldosPorEmp ase 
+inner join contratos con on ase.cuit = con.cuit
+inner join personas per on con.dni_persona = per.dni
+where con.sueldo > ase.AvgSueldo
+
+
 -- Ejercicio 8
 -- Determinar las empresas que pagaron en promedio la mayor o menor de  las comisiones
+drop temporary table if exists avgComPorEmp;
+
+create temporary table avgComPorEmp
+select em.razon_social, avg(co.importe_comision) avgComisiones
+from contratos c
+inner join comisiones co on c.nro_contrato = co.nro_contrato
+inner join empresas em on c.cuit = em.cuit
+group by 1;
+
+-- BASE DE DATOS: AFATSE
+use afatse;
+-- Ejercicio 9
+-- Alumnos que se hayan inscripto a más cursos que Antoine de Saint-Exupery. 
+-- Mostrar todos los datos de los alumnos, la cantidad de cursos a la que se inscribió 
+-- y cuantas veces más que Antoine de Saint-Exupery.
