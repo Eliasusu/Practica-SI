@@ -188,4 +188,3 @@ left join curso cur on ins.legajo = cur.legajo_instructor and YEAR(cur.fecha_ini
 group by ins.legajo, ins.nombre, ins.apellido
 having CantidadCursosDictados < @promedio
 order by CantidadCursosDictados desc;
-
