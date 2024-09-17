@@ -2,6 +2,8 @@
 
 use guarderia_gaghiel;
 
+-- PRACTICA HAVING Y GROUP BY
+
 -- Ejercicio 1 
 -- Realiza un análisis que muestre para cada instructor, las actividades que ha realizado, 
 -- el número total de cursos que ha dictado y la duración promedio de esos cursos. Además, 
@@ -97,3 +99,93 @@ LEFT JOIN inscripcion insc ON cur.numero = insc.numero_curso
 GROUP BY 1,2
 HAVING Cantidad_Alumnos_Inscriptos < 4
 ORDER BY Cantidad_Alumnos_Inscriptos DESC;
+
+
+-- PRACTICA SUBCONSULTAS, VARIABLES, TABLAS TEMPORALES Y CTE
+
+-- Ejercicio 1
+-- Embarcaciones que no renovaron contrato.
+
+-- Listar embarcaciones que hayan estado almacenadas el año pasado (segun la fecha de contrato) 
+-- pero no tengan contratos activos actualmente.
+-- Indicar hin, nombre y descripcion de la embarcacion. Ordenar por nombre.
+
+with embarcacionesAnioPasado as (
+    select ec.hin, ec.fecha_hora_contrato, ec.fecha_hora_baja_contrato
+    from embarcacion_cama ec   
+    where YEAR(ec.fecha_hora_contrato) = '2023' and ec.fecha_hora_baja_contrato is not null
+) select distinct em.hin, em.nombre, em.descripcion
+from embarcacionesAnioPasado eap
+inner join embarcacion em on eap.hin = em.hin
+order by em.nombre  
+
+-- Ejercicio 2
+-- Sectores con muchas embarcaciones.
+
+-- Listar los sectores que tienen mas embarcaciones almacenadas actualmente
+-- que el promedio de la cantidad de embarcaciones actualmente almacenadas en cada sector.
+-- Se deben tener en cuenta para el promedio los sectores que podrian no tener embarcaciones actualmente almacenadas.
+-- Indicar código, nombre, cantidad de embarcaciones actualmente almacenadas.
+
+set @promedio = (
+select  AVG(EmbarcacionesAlmacenadas) as Promedio
+from ( select emca.codigo_sector, count(*) as EmbarcacionesAlmacenadas
+    from embarcacion_cama emca
+    where emca.fecha_hora_baja_contrato is null
+    group by emca.codigo_sector
+) as subconsulta
+);
+
+select sec.codigo, sec.nombre, count(*) as CantidadEmbarcacionesAlmacenadas
+from embarcacion_cama emca
+inner join sector sec on emca.codigo_sector = sec.codigo
+where emca.fecha_hora_baja_contrato is null
+group by sec.codigo, sec.nombre
+having CantidadEmbarcacionesAlmacenadas > @promedio
+
+-- ENUNCIADO PARCIALITO 
+
+-- Ejercicio 1
+-- Socios que dejaron de hacer cursos.
+
+-- Listar los socios que se hayan inscripto a cursos el año pasado pero no este. 
+-- Indicar número y nombre del socio. Ordenar por nombre.
+
+select so.numero, so.nombre
+from inscripcion ins
+inner join socio so on ins.numero_socio = so.numero 
+where YEAR(ins.fecha_hora_inscripcion) = '2023' and so.numero not in (
+    select so.numero 
+    from inscripcion ins
+    inner join socio so on ins.numero_socio = so.numero 
+    where YEAR(ins.fecha_hora_inscripcion) = '2024'
+)
+order by so.nombre
+
+
+-- Ejercicio 2
+--Instructores haraganes. 
+-- Listar los instructores que dictan menos cursos durante 2024 que el promedio de la cantidad 
+-- de cursos que dicta cada instructor en 2024. Se deben tener en cuenta para el promedio 
+-- los instructores que no dictan cursos. Indicar legajo, nombre y apellido del instructor y 
+-- la cantidad de cursos que dicta en 2024. Ordenar por cantidad de cursos descendente.
+
+
+set @promedio = (
+select  AVG(CantidadCursos) as Promedio
+from ( select distinct  ins.legajo, count(*) as CantidadCursos
+    from instructor ins
+    left join curso cur on ins.legajo = cur.legajo_instructor and year(cur.fecha_inicio) = '2024'
+    group by ins.legajo
+) as subconsulta
+);
+select @promedio
+
+select cur.legajo_instructor, concat(ins.nombre, ' ',ins.apellido) as Nombre, count(*) as CantidadCursosDictados
+from curso cur
+inner join instructor ins on cur.legajo_instructor = ins.legajo
+where YEAR(cur.fecha_inicio) = '2024'
+group by cur.legajo_instructor
+having CantidadCursosDictados < @promedio
+order by CantidadCursosDictados desc;
+
