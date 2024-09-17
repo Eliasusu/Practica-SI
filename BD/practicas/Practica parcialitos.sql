@@ -173,19 +173,19 @@ order by so.nombre
 
 set @promedio = (
 select  AVG(CantidadCursos) as Promedio
-from ( select distinct  ins.legajo, count(*) as CantidadCursos
+from ( select distinct  ins.legajo, count(cur.numero) as CantidadCursos
     from instructor ins
     left join curso cur on ins.legajo = cur.legajo_instructor and year(cur.fecha_inicio) = '2024'
     group by ins.legajo
 ) as subconsulta
 );
+
 select @promedio
 
-select cur.legajo_instructor, concat(ins.nombre, ' ',ins.apellido) as Nombre, count(*) as CantidadCursosDictados
-from curso cur
-inner join instructor ins on cur.legajo_instructor = ins.legajo
-where YEAR(cur.fecha_inicio) = '2024'
-group by cur.legajo_instructor
+select ins.legajo, concat(ins.nombre, ' ',ins.apellido) as Nombre, count(cur.numero) as CantidadCursosDictados
+from instructor ins
+left join curso cur on ins.legajo = cur.legajo_instructor and YEAR(cur.fecha_inicio) = '2024'
+group by ins.legajo, ins.nombre, ins.apellido
 having CantidadCursosDictados < @promedio
 order by CantidadCursosDictados desc;
 
