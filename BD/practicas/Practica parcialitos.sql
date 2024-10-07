@@ -188,3 +188,95 @@ left join curso cur on ins.legajo = cur.legajo_instructor and YEAR(cur.fecha_ini
 group by ins.legajo, ins.nombre, ins.apellido
 having CantidadCursosDictados < @promedio
 order by CantidadCursosDictados desc;
+
+-- PRACTICA PARA PARCIALITO 08/10/2024
+-- TEMA: SENTENCIAS DML (insert, update, delete, truncate con joins)
+
+-- Ejercicio 1
+-- Agregar un nuevo socio.
+
+start TRANSACTION;
+insert into socio(numero, tipo_doc, nro_doc, nombre)
+values(40, 'DNI', 34235643, 'Juan Perez');
+
+select soc.numero, soc.tipo_doc, soc.nro_doc, soc.nombre
+from socio soc
+where soc.numero = 40;
+
+commit;
+
+-- Ejercicio 2
+-- Eliminar un socio
+
+start transaction;
+delete from socio
+where numero = 40;
+
+commit;
+
+-- Ejercicio 3
+-- Actualizar el nombre de un socio
+
+start transaction;
+update socio
+set nombre = 'Juan Pereztica'
+where numero = 40;
+
+select soc.numero, soc.tipo_doc, soc.nro_doc, soc.nombre
+from socio soc
+where soc.numero = 40;
+
+commit;
+
+-- Ejercicio 4 
+-- Inscribe al socio Juan Pereztica a los cursos cuya actividad sea: 3D Maneuvering y Jedi Surf
+-- Ten en cuenta que si no hay cupo en el curso no se podra inscribir y ademas la fecha fin del curso debe ser menor a la fecha actual.
+
+-- //* Primero crearia un tabla temporal en donde guarde los cursos cuya actividad sea 
+-- //* 3D Maneuvering y Jedi Surf, con los atributos nro_curso, cupo, cupoRestante, fechaFin
+-- //* Teniendo en cuenta que si el cupoRestante es <= 0 no aparecerá en la tabla 
+-- //* Y si fechaFin <= CURDATE() tampoco estarián en la tabla
+
+START TRANSACTION;
+DROP TEMPORARY TABLE IF EXISTS cursos_temporal;
+CREATE TEMPORARY TABLE cursos_temporal
+SELECT cur.numero as numero_curso, cur.cupo, cur.cupo - COUNT(ins.numero_socio) as cupo_restante, cur.fecha_inicio as fecha_inicio
+FROM curso cur
+INNER JOIN inscripcion ins ON cur.numero = ins.numero_curso
+INNER JOIN actividad act ON cur.numero_actividad = act.numero
+WHERE act.nombre = '3D Maneuvering' OR act.nombre = 'Jedi Surf'
+GROUP BY numero_curso, cur.cupo, cur.fecha_fin
+HAVING cupo_restante > 0 AND fecha_inicio > CURDATE(); 
+
+-- //? Verifico que la tabla temporal se haya creado correctamente
+SELECT * FROM cursos_temporal;
+-- //* Teniendo esa tabla, inscribo a Juan Pereztica a los cursos ya que tengo el numero del curso de la tabla temporal
+INSERT INTO inscripcion(numero_curso, numero_socio, fecha_hora_inscripcion)
+SELECT cur_temp.numero_curso, soc.numero, CURDATE()
+FROM cursos_temporal cur_temp
+CROSS JOIN socio soc
+WHERE soc.nombre = 'Juan Pereztica';
+
+-- //? Verificación final
+SELECT ins.numero_curso, ins.numero_socio, ins.fecha_hora_inscripcion
+FROM inscripcion ins
+WHERE ins.numero_socio = 40;
+
+COMMIT;
+
+
+INSERT INTO inscripcion(numero_curso, numero_socio, fecha_hora_inscripcion)
+VALUES 
+
+
+-- Ejercicio 5
+-- Cambia la fecha de inscripcion del socio 40 al curso 1 para el '2024-10-08 10:00:00'
+
+
+
+-- Ejercicio 6
+-- Elimina la inscripción del socio 40 al curso 3
+
+
+-- Ejercicio 7
+-- Elimina todas las inscripciones del socio 40
