@@ -189,8 +189,10 @@ group by ins.legajo, ins.nombre, ins.apellido
 having CantidadCursosDictados < @promedio
 order by CantidadCursosDictados desc;
 
--- PRACTICA PARA PARCIALITO 08/10/2024
--- TEMA: SENTENCIAS DML (insert, update, delete, truncate con joins)
+
+
+-- //! PRACTICA PARA PARCIALITO 08/10/2024
+-- //! TEMAS: SENTENCIAS DML (insert, update, delete, truncate con joins)
 
 -- Ejercicio 1
 -- Agregar un nuevo socio.
@@ -271,7 +273,6 @@ VALUES
 
 -- Ejercicio 5
 -- Cambia la fecha de inscripcion del socio 40 al curso 1 para el '2024-10-08 10:00:00'
-
 
 
 -- Ejercicio 6
