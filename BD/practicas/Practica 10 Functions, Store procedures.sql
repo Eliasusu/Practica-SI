@@ -16,6 +16,10 @@ begin
     from valores_plan val
     inner join plan_capacitacion pc
     on val.nom_plan = pc.nom_plan
+
+    -- //? ¿Cual es el proceso mental/logico que haces para decir
+    -- //? "Ah, acá tengo que hacer una subconsulta?"
+
     inner join (
         select nom_plan, max(fecha_desde_plan) as fecha
         from valores_plan 
@@ -148,3 +152,161 @@ delimiter;
 call alumnos_pagos_deudas_a_fecha('2014-10-02', 'José', 'Ortega y Gasset', @cuotasPagadas, @cantAdeudado);
 
 select @cuotasPagadas as CuotasPagadas, @cantAdeudado as CuotasImpagas;
+
+
+-- Ejercicio 7
+-- Crear una función llamada alumnos_deudas_a_fecha que dado un alumno y una fecha
+-- indique cuantas cuotas adeuda a la fecha.
+
+delimiter;
+
+drop function if exists alumnos_deudas_a_fecha;
+create function alumnos_deudas_a_fecha(
+    dni_alumno INT, 
+    fecha_consulta DATE)
+    returns INT
+begin 
+    declare cantidadCuotasAdeudadas int;
+
+    select count(*) into cantidadCuotasAdeudadas
+    from cuotas c
+    where c.dni = dni_alumno 
+    and c.fecha_pago is null
+    and c.fecha_emision <= fecha_consulta
+    group by c.dni;
+
+    return cantidadCuotasAdeudadas;
+end
+
+delimiter;
+
+
+select c.dni, alumnos_deudas_a_fecha(c.dni, CURRENT_DATE()) as cant_adeudada
+from cuotas c
+group by c.dni;
+
+-- Ejercicio 8
+-- Crear un procedimiento almacenado llamado alumno_inscripcion que dados los datos de
+-- un alumno y un curso lo inscriba en dicho curso el día de hoy y genere la primera cuota con
+-- fecha de emisión hoy para el mes próximo.
+
+delimiter;
+
+drop procedure if exists alumno_inscripcion
+
+create procedure alumno_inscripcion (
+    in dni_alumno INT, 
+    in plan CHAR(20),
+    in curso INT
+)
+begin
+    start transaction;
+
+        insert into inscripciones(nom_plan, nro_curso, dni, fecha_inscripcion)
+        values (plan, curso, dni_alumno, CURRENT_DATE());
+
+        insert into cuotas(nom_plan, nro_curso, dni, anio, mes, fecha_emision)
+        values (plan, curso, dni_alumno, YEAR(CURRENT_DATE()), MONTH(CURRENT_DATE()), CURRENT_DATE());
+
+    commit;
+end;
+
+delimiter;
+
+call alumno_inscripcion(20202020, 'Marketing 1', 1)
+
+
+-- Ejercicio 9
+-- Modificar el procedimiento almacenado creado en 8) para que antes de inscribir a un
+-- alumno valide que el mismo no esté ya inscripto.
+
+delimiter;
+
+drop procedure if exists alumno_inscripcion
+
+create procedure alumno_inscripcion (
+    in dni_alumno INT, 
+    in plan CHAR(20),
+    in curso INT
+)
+begin
+    declare cantidadInscripciones int;
+
+    select count(*) into cantidadInscripciones
+    from inscripciones i
+    where i.dni = dni_alumno
+    and i.nom_plan = plan
+    and i.nro_curso = curso;
+
+    if cantidadInscripciones = 0 then
+        start transaction;
+
+            insert into inscripciones(nom_plan, nro_curso, dni, fecha_inscripcion)
+            values (plan, curso, dni_alumno, CURRENT_DATE());
+
+            insert into cuotas(nom_plan, nro_curso, dni, anio, mes, fecha_emision)
+            values (plan, curso, dni_alumno, YEAR(CURRENT_DATE()), MONTH(CURRENT_DATE()), CURRENT_DATE());
+
+        commit;
+    else
+        select 'El alumno ya está inscripto en el curso' as mensaje;
+    end if;
+commit;
+end;
+
+delimiter;
+
+call alumno_inscripcion(20202020, 'Marketing 1', 1)
+
+
+-- Ejercicio 10
+-- Modificar el procedimiento almacenado editado en 9) para que realice el proceso en una
+-- transacción. Además luego de inscribirlo y generar la cuota verificar si la cantidad de
+-- inscriptos supera el cupo, en ese caso realizar un ROLLBACK. Si la cantidad de inscriptos es
+-- correcta ejecutar un COMMIT
+
+delimiter;
+
+drop procedure if exists alumno_inscripcion
+
+create procedure alumno_inscripcion (
+    in dni_alumno INT, 
+    in plan CHAR(20),
+    in curso INT
+)
+begin
+    declare cantidadInscripciones int;
+    declare cupoCurso int;
+
+    select count(*) into cantidadInscripciones
+    from inscripciones i
+    where i.nom_plan = plan
+    and i.nro_curso = curso;
+
+    select cupo into cupoCurso
+    from cursos
+    where nom_plan = plan
+    and nro_curso = curso;
+
+    if cantidadInscripciones < cupoCurso then
+        select 'Cupo disponible' as mensaje;
+        start transaction;
+
+            insert into inscripciones(nom_plan, nro_curso, dni, fecha_inscripcion)
+            values (plan, curso, dni_alumno, CURRENT_DATE());
+
+            insert into cuotas(nom_plan, nro_curso, dni, anio, mes, fecha_emision)
+            values (plan, curso, dni_alumno, YEAR(CURRENT_DATE()), MONTH(CURRENT_DATE()), CURRENT_DATE());
+
+
+
+        commit;
+    else
+        select 'El curso ya tiene el cupo completo' as mensaje;
+        rollback;
+    end if;
+end;
+
+delimiter;
+
+call alumno_inscripcion(22222222, 'Marketing 1', 1)
