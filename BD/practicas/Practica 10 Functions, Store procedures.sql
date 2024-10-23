@@ -1,3 +1,4 @@
+-- Active: 1721298484659@@127.0.0.1@3306@afatse
 use afatse;
 
 SET GLOBAL log_bin_trust_function_creators = 1;
@@ -309,4 +310,162 @@ end;
 
 delimiter;
 
-call alumno_inscripcion(22222222, 'Marketing 1', 1)
+call alumno_inscripcion(22222222, 'Marketing 1', 1);
+
+-- Ejercicio 11
+-- Crear dos procedimientos almacenados, aplicando conceptos de reutilización de código:
+-- > stock_ingreso dado el código de material y la cantidad ingresada (número positivo) que realice un ingreso de mercadería.
+-- > stock_egreso dado el código de material y la cantidad egresada (número positivo) que realice un egreso de mercadería.
+
+-- Ambos procedimientos deberán devolver la cantidad restante en stock.
+-- Realizar las validaciones pertinentes.
+
+drop procedure if exists stock_movimiento;
+
+delimiter $$
+
+create procedure stock_movimiento (
+    IN cod_mat VARCHAR(20), 
+    IN cant_mov INT, 
+    OUT stock INT 
+)
+begin 
+    declare tipoMaterial VARCHAR(255);
+    declare cantDisponible int;
+
+    select mat.url_descarga
+    into tipoMaterial
+    from materiales mat
+    where cod_mat = mat.cod_material;
+
+    if tipoMaterial is null then
+        start transaction;
+
+            update materiales mat
+            set mat.cant_disponible = mat.cant_disponible + cant_mov
+            where cod_mat = mat.cod_material;
+
+            select mat.cant_disponible
+            into cantDisponible
+            from materiales mat
+            where cod_mat = mat.cod_material;
+
+            if cantDisponible >= 0 then 
+                commit;
+                set stock = cantDisponible;
+            else
+                select 'El stock restante es menor a 0' as mensaje;
+                set stock = -2;
+                rollback;
+            end if;
+    else
+        select 'El material es un apunte' as mensaje;
+        set stock = -1;
+    end if;
+end$$
+
+drop procedure if exists stock_ingreso;
+
+delimiter $$
+
+create procedure stock_ingreso(
+    IN cod_mat VARCHAR(20),
+    IN cant_ingreso INT,
+    OUT stock_upd INT
+)
+begin 
+    declare stock_actualizado INT;
+
+    call stock_movimiento(cod_mat, cant_ingreso, stock_actualizado);
+
+    if stock_actualizado >= 0 then
+        set stock_upd = stock_actualizado;
+    elseif stock_actualizado = -1 then
+        select 'El material es un apunte' as mensaje;
+    else
+        select 'El stock restante es menor a 0' as mensaje;
+    end if;
+end$$
+
+delimiter ;
+
+
+drop procedure if exists stock_egreso;
+
+delimiter $$
+
+create procedure stock_egreso(
+    IN cod_mat VARCHAR(20),
+    IN cant_egreso INT,
+    OUT stock_upd INT
+)
+begin 
+    declare stock_actualizado INT;
+
+    call stock_movimiento(cod_mat, (cant_egreso * -1), stock_actualizado);
+
+    if stock_actualizado >= 0 then
+        set stock_upd = stock_actualizado;
+    elseif stock_actualizado = -1 then
+        select 'El material es un apunte' as mensaje;
+    else
+        select 'El stock restante es menor a 0' as mensaje;
+    end if;
+end$$
+
+delimiter ;
+
+delimiter $$;
+
+call stock_egreso('UT-002', 40, @stock)
+
+$$
+
+-- Crear un procedimiento almacenado llamado alumno_anula_inscripcion:
+-- que elimine la inscripción del alumno. El mismo deberá tener en cuenta que el alumno no haya pagado
+-- ninguna cuota antes de eliminarlo. Si hay cuotas ya generadas pero impagas las mismas deberán ser eliminadas.
+
+drop procedure if exists alumno_anula_inscripcion;
+
+delimiter $$
+
+create procedure alumno_anula_inscripcion (
+    IN dni_alumno INT,
+    IN nro_curso INT,
+    IN nom_plan VARCHAR(20)
+)
+begin
+    start transaction; 
+        drop temporary table if exists cuotas_alumno;
+
+        create temporary table cuotas_alumno as
+        select c.dni, c.nro_curso, c.nom_plan, c.fecha_emision, c.fecha_pago
+        from cuotas c
+        where dni_alumno = c.dni 
+        and nro_curso = c.nro_curso
+        and nom_plan = c.nom_plan;
+
+        set @cantCuotasPagadas = (
+            select count(ca.fecha_pago)
+            from cuotas_alumno ca
+            where ca.fecha_pago is not null
+        );
+
+        if @cantCuotasPagadas = 0 then
+            delete from cuotas
+            where dni in (select dni from cuotas_alumno)
+            and nro_curso in (select nro_curso from cuotas_alumno)
+            and nom_plan in (select nom_plan from cuotas_alumno);
+
+            delete from inscripciones
+            where dni = dni_alumno
+            and nro_curso = nro_curso
+            and nom_plan = nom_plan;
+            
+        else
+            select 'El alumno tiene cuotas pagadas' as mensaje;
+        end if;
+    commit;
+end$$
+
+delimiter ;
