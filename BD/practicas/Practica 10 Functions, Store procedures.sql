@@ -1,4 +1,4 @@
--- Active: 1721298484659@@127.0.0.1@3306@afatse
+-- Active: 1721298484659@@127.0.0.1@3306@guarderia_gaghiel_parcialitos
 use afatse;
 
 SET GLOBAL log_bin_trust_function_creators = 1;
@@ -467,5 +467,40 @@ begin
         end if;
     commit;
 end$$
-
 delimiter ;
+
+
+use guarderia_gaghiel_parcialitos;
+
+-- Enunciado Parcialito 
+-- Promo para socio. La empresa desea incrementar la cantidad de socios que asisten a cursos. 
+-- Se debe crear una rutina llamada "actividades_para_socio" que reciba un número de socio como parámetro y 
+-- liste las actividades que podría realizar con alguna de sus embarcaciones, en base al tipo de embarcación, 
+-- pero que aún no haya realizado ningún curso de dicha actividad. Indicar hin y nombre de la embarcación, número, nombre y descripción de la actividad.
+-- Utilizar el socio número 5 para invocar la rutina (incluirlo en la entrega.)
+
+delimiter $$;
+DROP PROCEDURE actividades_para_socio;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `actividades_para_socio`(numero_socio INT)
+BEGIN
+        SELECT 
+            e.hin, 
+            e.nombre AS nombre_embarcacion, 
+            a.numero AS numero_actividad, 
+            a.nombre AS nombre_actividad, 
+            a.descripcion AS descripcion_actividad
+        FROM 
+            socio s
+        INNER JOIN 
+            embarcacion e ON s.numero = e.numero_socio
+        INNER JOIN 
+            actividad a ON e.codigo_tipo_embarcacion = a.codigo_tipo_embarcacion
+        LEFT JOIN 
+            curso c ON a.numero = c.numero_actividad
+        WHERE 
+            s.numero = numero_socio;
+END
+
+delimiter;
+
+CALL actividades_para_socio(5);

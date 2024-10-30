@@ -114,5 +114,28 @@ where i.cuil = '66-66666666-6';
 
 commit;
 
+-- Ejercicio 6 
+/* Eliminar los exámenes donde el promedio general de las evaluaciones sea menor a 5.5.
+Eliminar también los temas que sólo se evalúan en esos exámenes. Ayuda: Usar una tabla
+temporal para determinar el/los exámenes que cumplan en las condiciones y utilizar
+dichas tabla para los joins. Tener en cuenta las CF para poder eliminarlos. */
 
+start transaction;
+drop temporary table if exists examenes_eliminar;
+create temporary table examenes_eliminar as (
+    select e.nom_plan, e.nro_examen, AVG(ev.nota) as promedio
+    from examenes e
+    inner join examenes_temas et on e.nom_plan = et.nom_plan and e.nro_examen = et.nro_examen
+    inner join evaluaciones ev on e.nom_plan = ev.nom_plan and e.nro_examen = ev.nro_examen
+    group by e.nom_plan, e.nro_examen
+    having AVG(ev.nota) > 5.5
+);
 
+select * from examenes_eliminar;
+delete from examenes_temas
+where (nom_plan, nro_examen) not in (select nom_plan, nro_examen from examenes_eliminar);
+
+delete from examenes
+where (nom_plan, nro_examen) not in (select nom_plan, nro_examen from examenes_eliminar);
+
+rollback;

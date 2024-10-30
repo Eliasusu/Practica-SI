@@ -26,9 +26,6 @@ c) Probarlo ejecutando INSERTS y UPDATES dentro de transacciones. Probar con
 ROLLBACK y luego con COMMIT. */
 
 
-
-
-
 /*
 -- Ejercicio 2
 a) Crear la tabla stock_movimientos para registrar las cambios en las existencias de
@@ -46,14 +43,14 @@ CONSTRAINT `stock_movimientos_fk` FOREIGN KEY (`cod_material`) REFERENCES
 `materiales` (`cod_material`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-//! Aclaración: En este caso utilizamos el tipo de datos timestamp en lugar de datetime
-//! para registrar la fecha y hora de la modificación.
-//! En el ejercicio anterior utilizamos el tipo de dato datetime pero entonces debemos
-//! registrar el dato a nosotros (en ese caso lo hicimos con CURRENT_TIMESTAMP). En los
-//! casos donde queremos hacer históricos o asegurarnos de que se registra el momento
-//! exacto en que se inserta un dato es mejor utilizar el tipo de dato timestamp que hace
-//! esto automáticamente pero en los INSERT que realicemos sobre las tablas con estos
-//! datos deberemos omitir este campo.
+? Aclaración: En este caso utilizamos el tipo de datos timestamp en lugar de datetime
+? para registrar la fecha y hora de la modificación.
+? En el ejercicio anterior utilizamos el tipo de dato datetime pero entonces debemos
+? registrar el dato a nosotros (en ese caso lo hicimos con CURRENT_TIMESTAMP). En los
+? casos donde queremos hacer históricos o asegurarnos de que se registra el momento
+? exacto en que se inserta un dato es mejor utilizar el tipo de dato timestamp que hace
+? esto automáticamente pero en los INSERT que realicemos sobre las tablas con estos
+? datos deberemos omitir este campo.
 
 b) Crear TRIGGERS para registrar los movimientos en las cantidades de los materiales en
 la tabla del histórico. En el caso de un nuevo material se debe registrar la cantidad
@@ -62,7 +59,8 @@ registrar el cambio.
 
 c) Probarlo ejecutando INSERTS y UPDATES dentro de transacciones. Probar con
 ROLLBACK y luego con COMMIT.
- */
+
+*/
 CREATE TABLE `stock_movimientos` (
 `cod_material` char(6) NOT NULL,
 `fecha_movimiento` timestamp NOT NULL default CURRENT_TIMESTAMP on update
