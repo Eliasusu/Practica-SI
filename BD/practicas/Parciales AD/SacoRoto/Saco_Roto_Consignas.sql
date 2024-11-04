@@ -41,6 +41,15 @@ select tp.cod_tipo_prenda, tp.desc_tipo_prenda
 from tipos_prendas tp
 where tp.cod_tipo_prenda not in (select pre.cod_tipo_prenda from prendas pre);
 
+-- // * Las subconsultas se utilizan para comparar un unico atributo que saco de una tabla o joins entre tablas
+
+
+-- // ! Resolucion con LEFT JOIN
+
+select tp.cod_tipo_prenda, tp.desc_tipo_prenda
+from tipos_prendas tp
+left join prendas pre on tp.cod_tipo_prenda = pre.cod_tipo_prenda
+where pre.cod_tipo_prenda is null;
 
 -- // ? Ejercicio 4 DML
 -- // ? Última fecha de prueba
@@ -158,3 +167,5 @@ references unidades_medida(cod_unidad)
 on delete cascade
 on update cascade;
 
+-- //? Horarios de consulta Jueves 09:00 AM y 19:15 PM
+-- //? Horarios de consulta Martes 17:30 PM
