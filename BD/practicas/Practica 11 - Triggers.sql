@@ -1,3 +1,4 @@
+-- Active: 1721298484659@@127.0.0.1@3306@afatse
 -- //? TRIGGERS
 
 /* Ejercicio 1
@@ -25,6 +26,61 @@ con CURRENT_TIMESTAMP y el usuario actual con CURRENT_USER.
 c) Probarlo ejecutando INSERTS y UPDATES dentro de transacciones. Probar con
 ROLLBACK y luego con COMMIT. */
 
+-- //? a) Crear una tabla para registrar el histórico de cambios en los datos de los alumnos
+
+CREATE TABLE `alumnos_historico` (
+`dni` int(11) NOT NULL,
+`fecha_hora_cambio` datetime NOT NULL,
+`nombre` varchar(20) default NULL,
+`apellido` varchar(20) default NULL,
+`tel` varchar(20) default NULL,
+`email` varchar(50) default NULL,
+`direccion` varchar(50) default NULL,
+`usuario_modificacion` varchar(50) default NULL,
+PRIMARY KEY (`dni`,`fecha_hora_cambio`),
+CONSTRAINT `alumnos_historico_alumnos_fk` FOREIGN KEY (`dni`) REFERENCES
+`alumnos` (`dni`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- //? b) Luego crear TRIGGERS para insertar los nuevos valores en archivo_historico cuando los
+-- //? alumnos sean ingresados o sus datos sean modificados. Registrar la fecha y hora actual
+-- //? con CURRENT_TIMESTAMP y el usuario actual con CURRENT_USER.
+
+drop trigger if exists alumnos_after_upd_tr;
+
+create trigger alumnos_after_upd_tr after update on alumnos for each row
+begin
+	update alumnos_historico ah
+	set ah.dni = new.dni,
+	ah.fecha_hora_cambio = CURRENT_TIMESTAMP(),
+	ah.nombre = new.nombre,
+	ah.apellido = new.apellido,
+	ah.tel = new.tel,
+	ah.email = new.email,
+	ah.direccion = new.direccion,
+	ah.usuario_modificacion = CURRENT_USER()
+	where ah.dni = new.dni;
+end;
+
+drop trigger if exists alumnos_after_ins_tr;
+
+create trigger alumnos_after_ins_tr after insert on alumnos for each row
+begin
+	insert into alumnos_historico(dni, fecha_hora_cambio, nombre, apellido, tel, email, direccion, usuario_modificacion)
+	values(new.dni, CURRENT_TIMESTAMP(), new.nombre, new.apellido, new.tel, new.email, new.direccion, CURRENT_USER());
+end;
+
+-- //? c) Probarlo ejecutando INSERTS y UPDATES dentro de transacciones
+
+start transaction;
+insert into alumnos
+values(25252525, 'Elias', 'Koteas', '2525252', 'eliaskoteas@gmail.com', 'Salta 2525')
+
+update alumnos
+set direccion = 'Saavedra 2525'
+where dni = 25252525;
+
+rollback;
 
 /*
 -- Ejercicio 2
@@ -139,9 +195,16 @@ e) Probarlo inscribiendo y anulando inscripciones dentro de transacciones. Reali
 pruebas con ROLLBACK y con COMMIT.
 */
 
+-- //? a) Modificar la tabla cursos, agregarle una columna llamada cant_inscriptos que será un
+-- //? atributo calculado de la cantidad de inscriptos al curso con el siguiente script:
+
 alter table `cursos`
 add column cant_inscriptos int(11) default null;
 
+alter table cursos
+drop column cant_inscriptos;
+
+-- //? b) Completar el campo con la cantidad actual de inscriptos
 START TRANSACTION;
 drop temporary table if exists insc_curso;
 create temporary table insc_curso
@@ -156,9 +219,37 @@ set c.`cant_inscriptos`=ic.cant;
 
 commit;
 
+-- //? c) Hacer obligatorio el campo cant_inscriptos
+
 alter table `cursos`
 modify cant_inscriptos int(11) not null;
 
+-- //? d) Crear los TRIGGERS necesarios para actualizar la cantidad de inscriptos del curso, los
+-- //? mismos deberán dispararse al inscribir un nuevo alumno y al eliminar una inscripción.
 
+drop trigger if exists inscripciones_before_ins_tr;
+create trigger inscripciones_before_ins_tr after insert on inscripciones for each row
+begin
+	update cursos c
+	set c.cant_inscriptos = cant_inscriptos + 1
+	where c.nom_plan = new.nom_plan 
+	and c.nro_curso = new.nro_curso;
+end;
+
+drop trigger if exists inscripciones_before_del_tr;
+create trigger inscripciones_before_del_tr after delete on inscripciones for each row
+begin
+	update cursos c
+	set c.cant_inscriptos = cant_inscriptos - 1
+	where c.nom_plan = old.nom_plan 
+	and c.nro_curso = old.nro_curso;
+end;
+
+
+-- //? e) Probarlo inscribiendo y anulando inscripciones dentro de transacciones
+
+call alumno_inscripcion(10101010, 'Reparac PC Avanzada', 1);
+
+call alumno_anula_inscripcion(10101010, 'Reparac PC Avanzada', 1);
 
 

@@ -1,4 +1,4 @@
--- Active: 1721298484659@@127.0.0.1@3306@guarderia_gaghiel_parcialitos
+-- Active: 1721298484659@@127.0.0.1@3306@afatse
 use afatse;
 
 SET GLOBAL log_bin_trust_function_creators = 1;
@@ -223,41 +223,65 @@ call alumno_inscripcion(20202020, 'Marketing 1', 1)
 
 delimiter;
 
-drop procedure if exists alumno_inscripcion
+drop procedure if exists alumno_anula_inscripcion;
 
-create procedure alumno_inscripcion (
-    in dni_alumno INT, 
-    in plan CHAR(20),
-    in curso INT
+delimiter $$
+
+create procedure alumno_anula_inscripcion (
+    IN dni_alumno INT,
+    IN nom_plan VARCHAR(20),
+    IN nro_curso INT
 )
 begin
-    declare cantidadInscripciones int;
+    start transaction; 
 
-    select count(*) into cantidadInscripciones
-    from inscripciones i
-    where i.dni = dni_alumno
-    and i.nom_plan = plan
-    and i.nro_curso = curso;
+    set @cantCuotasPagadas = (
+        select count(c.fecha_pago)
+        from cuotas c
+        where c.dni = dni_alumno 
+        and c.nro_curso = nro_curso
+        and c.nom_plan = nom_plan
+        and c.fecha_pago is not null
+    );
 
-    if cantidadInscripciones = 0 then
-        start transaction;
+    if @cantCuotasPagadas = 0 then
+        delete from evaluaciones e
+        where e.dni = dni_alumno
+        and e.nom_plan = nom_plan
+        and e.nro_curso = nro_curso;
 
-            insert into inscripciones(nom_plan, nro_curso, dni, fecha_inscripcion)
-            values (plan, curso, dni_alumno, CURRENT_DATE());
+        delete from cuotas
+        where dni = dni_alumno
+        and nro_curso = nro_curso
+        and nom_plan = nom_plan;
 
-            insert into cuotas(nom_plan, nro_curso, dni, anio, mes, fecha_emision)
-            values (plan, curso, dni_alumno, YEAR(CURRENT_DATE()), MONTH(CURRENT_DATE()), CURRENT_DATE());
-
-        commit;
+        delete from inscripciones
+        where dni = dni_alumno
+        and nro_curso = nro_curso
+        and nom_plan = nom_plan;
+        
     else
-        select 'El alumno ya está inscripto en el curso' as mensaje;
+        select 'El alumno tiene cuotas pagadas' as mensaje;
     end if;
-commit;
-end;
 
-delimiter;
+    commit;
+end$$
+
+delimiter ;
 
 call alumno_inscripcion(20202020, 'Marketing 1', 1)
+
+alter table evaluaciones
+drop foreign key evaluaciones_inscripciones_fk;
+
+alter table evaluaciones
+add constraint evaluaciones_inscripciones_fk
+foreign key (nom_plan, nro_curso, dni)
+references inscripciones(nom_plan, nro_curso, dni)
+on delete cascade
+on update cascade;
+
+call alumno_anula_inscripcion(20202020, 'Marketing 1', 1)
 
 
 -- Ejercicio 10
