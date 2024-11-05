@@ -74,11 +74,19 @@ end;
 
 start transaction;
 insert into alumnos
-values(25252525, 'Elias', 'Koteas', '2525252', 'eliaskoteas@gmail.com', 'Salta 2525')
+values(25252525, 'Elias', 'Koteas', '2525252', 'eliaskoteas@gmail.com', 'Salta 2525');
 
 update alumnos
 set direccion = 'Saavedra 2525'
 where dni = 25252525;
+
+
+insert into alumnos
+values(26262626, 'Laura', 'Hernandez', '2626262', 'lau@gmail.com', 'Salta 2525');
+
+update alumnos
+set direccion = 'Garibaldi 2525'
+where dni = 26262626;
 
 rollback;
 
@@ -253,3 +261,33 @@ call alumno_inscripcion(10101010, 'Reparac PC Avanzada', 1);
 call alumno_anula_inscripcion(10101010, 'Reparac PC Avanzada', 1);
 
 
+-- Ejercicio 4
+-- a) Agregar la columna usuario_alta a la tabla valores_plan con el siguiente script
+
+-- b) Crear un TRIGGER que una vez insertado el nuevo precio registre el usuario que lo ingresó.
+
+-- c) Probar el TRIGGER dentro de una transacción. Realizar las pruebas con ROLLABACK y COMMIT.
+
+-- //? a)
+
+alter table valores_plan
+add column usuario_alta varchar(50);
+
+-- //? b)
+
+drop trigger if exists valores_plan_before_ins_tr;
+
+create trigger valores_plan_before_ins_tr before insert on valores_plan for each row
+begin
+	set @usuario = current_user();
+	set new.usuario_alta = current_user();
+end;
+
+-- //? c)
+
+start transaction;
+
+insert into valores_plan(nom_plan, fecha_desde_plan, valor_plan)
+values('Marketing 3', '2024-11-05', 500000);
+
+rollback;
