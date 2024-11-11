@@ -166,6 +166,3 @@ foreign key (cod_unidad)
 references unidades_medida(cod_unidad)
 on delete cascade
 on update cascade;
-
--- //? Horarios de consulta Jueves 09:00 AM y 19:15 PM
--- //? Horarios de consulta Martes 17:30 PM
