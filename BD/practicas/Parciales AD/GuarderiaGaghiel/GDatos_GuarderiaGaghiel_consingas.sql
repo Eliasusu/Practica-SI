@@ -54,3 +54,35 @@ where te.nombre = 'Canoa'
 or te.nombre = 'Kayak'
 group by te.codigo, te.nombre, em.hin, em.nombre
 order by cantidad_de_salidas desc, em.hin asc;
+
+-- //? Ejercicio 4 DML
+-- //? Instructores de windsurf libres.
+
+select ins.legajo, concat(ins.nombre , ' ', ins.apellido) as Nombre, a.nombre, a.descripcion
+from instructor ins
+inner join instructor_actividad ia on ins.legajo = ia.legajo_instructor
+inner join actividad a on ia.numero_actividad = a.numero
+inner join tipo_embarcacion te on a.codigo_tipo_embarcacion = te.codigo and te.nombre = 'Tabla Wind Surf'
+where ins.legajo not in (select cur.legajo_instructor
+from curso cur);
+
+-- //? Ejercicio 5 DML 
+-- //? Variación en salidas de cada embarcación.
+
+
+drop temporary table if exists promedio_salidas_por_tipo_embarcacion;
+create temporary table promedio_salidas_por_tipo_embarcacion
+select te.codigo, te.nombre, count(sa.hin) as cantidad_salidas
+from tipo_embarcacion te
+inner join embarcacion em on em.codigo_tipo_embarcacion = te.codigo
+inner join salida sa on em.hin = sa.hin
+where YEAR(sa.fecha_hora_salida) = '2024'
+group by te.codigo, te.nombre;
+
+select * from promedio_salidas_por_tipo_embarcacion;
+
+select em.hin, em.nombre, count(sa.hin)
+from embarcacion em
+inner join salida sa on em.hin = sa.hin
+
+
