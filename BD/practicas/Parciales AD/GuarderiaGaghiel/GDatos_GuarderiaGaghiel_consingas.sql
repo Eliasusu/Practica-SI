@@ -70,19 +70,32 @@ from curso cur);
 -- //? Variación en salidas de cada embarcación.
 
 
-drop temporary table if exists promedio_salidas_por_tipo_embarcacion;
-create temporary table promedio_salidas_por_tipo_embarcacion
-select te.codigo, te.nombre, count(sa.hin) as cantidad_salidas
+drop temporary table if exists cantidad_salidas_por_tipo_embarcacion;
+create temporary table cantidad_salidas_por_tipo_embarcacion
+select te.codigo, te.nombre, count(sa.hin) as cantidad_salida_por_tipo
 from tipo_embarcacion te
 inner join embarcacion em on em.codigo_tipo_embarcacion = te.codigo
 inner join salida sa on em.hin = sa.hin
 where YEAR(sa.fecha_hora_salida) = '2024'
 group by te.codigo, te.nombre;
-
 select * from promedio_salidas_por_tipo_embarcacion;
 
-select em.hin, em.nombre, count(sa.hin)
-from embarcacion em
-inner join salida sa on em.hin = sa.hin
 
+-- //* incompleto
 
+-- //? Ejercicio 6 DDL y TCL
+-- //? Nuevo tipo de embarcación: Catamarán Deportivo
+
+start transaction;
+
+insert into tipo_embarcacion(codigo, nombre, operacion_requerida)
+values(9, 'Catamarán deportivo', 'Automática')
+
+insert into sector_tipo_embarcacion (codigo_tipo_embarcacion, codigo_sector)
+select codigo_sector, 9
+from sector_tipo_embarcacion ste
+inner join sector se on ste.codigo_sector = se.codigo
+where se.tipo_operacion = 'Automatico'
+
+rollback;
+commit;
