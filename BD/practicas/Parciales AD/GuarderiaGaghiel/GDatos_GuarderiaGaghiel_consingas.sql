@@ -215,26 +215,87 @@ on delete cascade
 on update cascade;
 
 
-*/ 
 
+/* 
+
+Cursos más exitosos. La empresa desea conocer para cada tipo de embarcación información de los cursos más exitosos. 
+Se considera que el curso más exitoso para cada tipo de embarcación es el que tiene mayor cantidad de socios inscriptos 
+dentro de los cursos de dicho tipo de embarcación (que se relaciona según la actividad realizada en el curso). 
+Se requiere listar para cada tipo de embarcación el curso más exitoso indicando: código y nombre del tipo de embarcación; 
+número, nombre y descripción de la actividad del curso, número de curso, cuántos días pasaron desde que se comenzó a dictar 
+dicho curso, cantidad de inscriptos que tuvo y la cantidad de embarcaciones del tipo de embarcación que 
+están actualmente almacenadas en la guardería.
+
+Si para un tipo de embarcación no se dictó ningún curso debe mostrarse igualmente con 0 inscriptos y sin datos de la actividad 
+o curso y si no hay embarcaciones almacenadas actualmente de dicho tipo debe mostrarse con 0.
+
+Ordenar por cantidad de embarcaciones almacenadas descendente, cantidad de inscriptos ascendente y días desde que comenzó 
+el curso ascendente
+
+*/
+
+/*
 Embarcaciones almacenadas. La empresa ha detectado dificultad para identificar si las embarcaciones se encuentran almacenadas o no a la hora de cierre. Por este motivo se ha decidido agregar una columna “almacenada” en la tabla embarcación que refleje la situación y automatizar con triggers el estado de dicha columna.
 
 Se requiere:
-
 1- Crear una columna almacenada para reflejar el estado (utilizar el tipo de dato que crea apropiado).
 
-2- Cargar el valor inicial de la columna. Las embarcaciones que no tengan una salida con fecha y hora de regreso real en null está almacenadas.
+2- Cargar el valor inicial de la columna. Las embarcaciones que no tengan una salida 
+con fecha y hora de regreso real en null está almacenadas.
 
-3- A través del uso de triggers al registrar una nueva salida de una embarcación cambiar el valor de la columna almacenada para reflejar que salió y al registrar una fecha y hora de regreso real reflejar que se encuentra almacenada.
-
+3- A través del uso de triggers al registrar una nueva salida de una embarcación cambiar el valor de la 
+columna almacenada para reflejar que salió y al registrar una fecha y hora de regreso real reflejar que se encuentra almacenada.
 */
 
-*/ 
+-- //? Ejercicio 9 Parcial AD
+-- //? Cursos Exitosos
 
-Cursos más exitosos. La empresa desea conocer para cada tipo de embarcación información de los cursos más exitosos. Se considera que el curso más exitoso para cada tipo de embarcación es el que tiene mayor cantidad de socios inscriptos dentro de los cursos de dicho tipo de embarcación (que se relaciona según la actividad realizada en el curso). Se requiere listar para cada tipo de embarcación el curso más exitoso indicando: código y nombre del tipo de embarcación; número, nombre y descripción de la actividad del curso, número de curso, cuántos días pasaron desde que se comenzó a dictar dicho curso, cantidad de inscriptos que tuvo y la cantidad de embarcaciones del tipo de embarcación que están actualmente almacenadas en la guardería.
+-- //* Primero se debe crear una tabla temporal para guardar todas las embarcaciones que estan almacenadas actualmente agrupadas por tipo de embarcacion
 
-Si para un tipo de embarcación no se dictó ningún curso debe mostrarse igualmente con 0 inscriptos y sin datos de la actividad o curso y si no hay embarcaciones almacenadas actualmente de dicho tipo debe mostrarse con 0.
+drop temporary table if exists embarcaciones_almacenadas;
+create temporary table embarcaciones_almacenadas as
+select te.codigo, te.nombre, count(distinct(sa.hin)) as cantidad_almacenadas
+from tipo_embarcacion te
+inner join embarcacion em on te.codigo = em.codigo_tipo_embarcacion
+inner join salida sa on em.hin = sa.hin
+where sa.fecha_hora_salida < CURRENT_DATE
+group by te.codigo, te.nombre;
 
-Ordenar por cantidad de embarcaciones almacenadas descendente, cantidad de inscriptos ascendente y días desde que comenzó el curso ascendente
+select * from embarcaciones_almacenadas;
 
-*/
+-- //* Ahora tengo que calcular la cantidad de inscriptos por curso, actividad y tipo de embarcacion, para luego hacer 
+-- //* un maximo en la cantidad de inscriptos
+
+drop temporary table if exists inscriptos;
+create temporary table inscriptos as 
+select cur.numero as numero_curso, cur.numero_actividad, count(ins.numero_socio) as cantidad_de_inscriptos
+from curso cur
+left join inscripcion ins on cur.numero = ins.numero_curso
+group by cur.numero, cur.numero_actividad;
+
+select * from inscriptos;
+
+
+/* select distinct(te.codigo) as cod_tipo_em, te.nombre as nom_tipo_em, ins.numero_actividad, a.nombre, a.descripcion, ins.numero_curso, max(ins.cantidad_de_inscriptos), emal.cantidad_almacenadas
+from inscriptos ins
+inner join actividad a on ins.numero_actividad = a.numero
+inner join tipo_embarcacion te on a.codigo_tipo_embarcacion = te.codigo
+inner join embarcaciones_almacenadas emal on te.codigo = emal.codigo; */
+
+-- //* Teniendo la cantidad de inscriptos por curso y actividad, ahora voy a maxear esos inscriptos
+drop temporary table if exists cursos_mas_exitosos;
+create temporary table cursos_mas_exitosos as 
+select  te.codigo as cod_tipo_em, ins.numero_curso, ins.numero_actividad, max(ins.cantidad_de_inscriptos) as cantidad_inscriptos
+from inscriptos ins
+inner join actividad a on ins.numero_actividad = a.numero
+inner join tipo_embarcacion te on a.codigo_tipo_embarcacion = te.codigo
+group by cod_tipo_em, ins.numero_curso, ins.numero_actividad;
+
+select * from cursos_mas_exitosos;
+
+select DISTINCT cme.cod_tipo_em, te.nombre, cme.numero_actividad, a.nombre, a.descripcion, cme.numero_curso, TIMESTAMPDIFF(day, cu.fecha_inicio, cu.fecha_fin) as cantidad_dias , cme.cantidad_inscriptos, ea.cantidad_almacenadas
+from cursos_mas_exitosos cme
+inner join actividad a on cme.numero_actividad = a.numero
+inner join tipo_embarcacion te on cme.cod_tipo_em = te.codigo
+inner join curso cu on cme.numero_curso = cu.numero
+inner join embarcaciones_almacenadas ea on cme.cod_tipo_em = ea.codigo;
