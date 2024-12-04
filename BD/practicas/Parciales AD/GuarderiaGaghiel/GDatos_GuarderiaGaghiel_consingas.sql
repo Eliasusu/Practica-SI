@@ -213,3 +213,28 @@ add CONSTRAINT fk_tipo_operacion_tipo_embarcacion
 Foreign Key (cod_tipo_operacion) REFERENCES tipo_operacion(cod_operacion)
 on delete cascade
 on update cascade;
+
+
+*/ 
+
+Embarcaciones almacenadas. La empresa ha detectado dificultad para identificar si las embarcaciones se encuentran almacenadas o no a la hora de cierre. Por este motivo se ha decidido agregar una columna “almacenada” en la tabla embarcación que refleje la situación y automatizar con triggers el estado de dicha columna.
+
+Se requiere:
+
+1- Crear una columna almacenada para reflejar el estado (utilizar el tipo de dato que crea apropiado).
+
+2- Cargar el valor inicial de la columna. Las embarcaciones que no tengan una salida con fecha y hora de regreso real en null está almacenadas.
+
+3- A través del uso de triggers al registrar una nueva salida de una embarcación cambiar el valor de la columna almacenada para reflejar que salió y al registrar una fecha y hora de regreso real reflejar que se encuentra almacenada.
+
+*/
+
+*/ 
+
+Cursos más exitosos. La empresa desea conocer para cada tipo de embarcación información de los cursos más exitosos. Se considera que el curso más exitoso para cada tipo de embarcación es el que tiene mayor cantidad de socios inscriptos dentro de los cursos de dicho tipo de embarcación (que se relaciona según la actividad realizada en el curso). Se requiere listar para cada tipo de embarcación el curso más exitoso indicando: código y nombre del tipo de embarcación; número, nombre y descripción de la actividad del curso, número de curso, cuántos días pasaron desde que se comenzó a dictar dicho curso, cantidad de inscriptos que tuvo y la cantidad de embarcaciones del tipo de embarcación que están actualmente almacenadas en la guardería.
+
+Si para un tipo de embarcación no se dictó ningún curso debe mostrarse igualmente con 0 inscriptos y sin datos de la actividad o curso y si no hay embarcaciones almacenadas actualmente de dicho tipo debe mostrarse con 0.
+
+Ordenar por cantidad de embarcaciones almacenadas descendente, cantidad de inscriptos ascendente y días desde que comenzó el curso ascendente
+
+*/
