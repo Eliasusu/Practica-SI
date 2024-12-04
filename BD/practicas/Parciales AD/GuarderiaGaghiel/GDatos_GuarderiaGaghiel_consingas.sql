@@ -82,8 +82,8 @@ select * from cantidad_salidas;
 
 drop temporary table if exists promedios;
 create temporary table if not exists promedios
-select codigo, anio, avg(cantidad_salidas) as promedio_salidas
-from cantidad_salidas
+select codigo, anio, avg(cs.cantidad_salidas) as promedio_salidas
+from cantidad_salidas cs
 group by codigo, anio;
 
 select * from promedios
