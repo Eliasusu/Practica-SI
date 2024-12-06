@@ -1,5 +1,5 @@
 -- Active: 1721298484659@@127.0.0.1@3306@guarderia_gaghiel
--- Ejercicios 
+-- Ejercicios
 
 -- //? Ejercicio 1 DML
 -- //?Embarcaciones en sectores a reacondicionar
@@ -15,20 +15,20 @@ order by ec.numero_cama ASC;
 -- //? Ejercicio 2 DML
 -- //? Personas fisicas que regresaron tarde en 2024
 select so.nro_doc, so.nombre, em.hin, em.nombre, sa.fecha_hora_salida as salida_con_regreso_tarde
-from socio so 
+from socio so
 inner join embarcacion em on so.numero = em.numero_socio
 left join salida sa on em.hin = sa.hin
 where so.tipo_doc = 'dni'
-and sa.fecha_hora_salida is null 
+and sa.fecha_hora_salida is null
 or sa.fecha_hora_regreso_tentativo < sa.fecha_hora_regreso_real;
 
 -- //* Prueba de si esta bien la resolucion
 select so.nro_doc, so.nombre, em.hin, count(sa.fecha_hora_salida) as cantidad_salidas
-from socio so 
+from socio so
 inner join embarcacion em on so.numero = em.numero_socio
 left join salida sa on em.hin = sa.hin
 where so.tipo_doc = 'dni'
-and sa.fecha_hora_salida is null 
+and sa.fecha_hora_salida is null
 or sa.fecha_hora_regreso_tentativo < sa.fecha_hora_regreso_real
 group by so.nro_doc, so.nombre, em.hin;
 
@@ -41,11 +41,11 @@ group by so.nro_doc, so.nombre;
 -- //? Ejercicio 3 DML
 -- //? Canoas y Kayas con pocas salidas.
 
-select te.codigo, te.nombre, em.hin, em.nombre, 
-    count(sa.fecha_hora_salida) as cantidad_de_salidas, 
-    case 
+select te.codigo, te.nombre, em.hin, em.nombre,
+    count(sa.fecha_hora_salida) as cantidad_de_salidas,
+    case
         when count(sa.fecha_hora_salida) = 0 then 'Sin salidas'
-        else max(sa.fecha_hora_salida) 
+        else max(sa.fecha_hora_salida)
     end as ultima_salida
 from tipo_embarcacion te
 inner join embarcacion em on em.codigo_tipo_embarcacion = te.codigo
@@ -66,7 +66,7 @@ inner join tipo_embarcacion te on a.codigo_tipo_embarcacion = te.codigo and te.n
 where ins.legajo not in (select cur.legajo_instructor
 from curso cur);
 
--- //? Ejercicio 5 DML 
+-- //? Ejercicio 5 DML
 -- //? Variación en salidas de cada embarcación.
 
 drop temporary table if exists cantidad_salidas;
@@ -74,7 +74,7 @@ create temporary table cantidad_salidas as
 select em.hin, te.codigo, year(sa.fecha_hora_salida) as anio, count(sa.fecha_hora_salida) as cantidad_salidas
 from embarcacion em
 inner join tipo_embarcacion te on em.codigo_tipo_embarcacion = te.codigo
-left join salida sa on em.hin = sa.hin  
+left join salida sa on em.hin = sa.hin
 where year(sa.fecha_hora_salida) = 2024
 group by em.hin, te.codigo, year(sa.fecha_hora_salida);
 
@@ -157,7 +157,7 @@ delimiter;
 -- //? Ejercicio 8 TCL/DDL
 -- //? Tipo operacion
 
--- //? a) Crear la tabla: tipo_operacion 
+-- //? a) Crear la tabla: tipo_operacion
 drop table if exists tipo_operacion;
 create table tipo_operacion (
     cod_operacion int not null AUTO_INCREMENT,
@@ -174,12 +174,12 @@ select DISTINCT(se.tipo_operacion)
 from sector se;
 commit;
 
--- //? c) y d) 
+-- //? c) y d)
 
-alter table sector 
+alter table sector
 add column cod_tipo_operacion int not null;
 
-alter table tipo_embarcacion 
+alter table tipo_embarcacion
 add column cod_tipo_operacion int not null;
 
 start transaction;
@@ -215,40 +215,28 @@ on delete cascade
 on update cascade;
 
 
+-- //? Ejercicio 9 Parcial AD
+-- //? Cursos Exitosos
 
-/* 
+/*
 
-Cursos más exitosos. La empresa desea conocer para cada tipo de embarcación información de los cursos más exitosos. 
-Se considera que el curso más exitoso para cada tipo de embarcación es el que tiene mayor cantidad de socios inscriptos 
-dentro de los cursos de dicho tipo de embarcación (que se relaciona según la actividad realizada en el curso). 
-Se requiere listar para cada tipo de embarcación el curso más exitoso indicando: código y nombre del tipo de embarcación; 
-número, nombre y descripción de la actividad del curso, número de curso, cuántos días pasaron desde que se comenzó a dictar 
-dicho curso, cantidad de inscriptos que tuvo y la cantidad de embarcaciones del tipo de embarcación que 
+Cursos más exitosos. La empresa desea conocer para cada tipo de embarcación información de los cursos más exitosos.
+Se considera que el curso más exitoso para cada tipo de embarcación es el que tiene mayor cantidad de socios inscriptos
+dentro de los cursos de dicho tipo de embarcación (que se relaciona según la actividad realizada en el curso).
+Se requiere listar para cada tipo de embarcación el curso más exitoso indicando: código y nombre del tipo de embarcación;
+número, nombre y descripción de la actividad del curso, número de curso, cuántos días pasaron desde que se comenzó a dictar
+dicho curso, cantidad de inscriptos que tuvo y la cantidad de embarcaciones del tipo de embarcación que
 están actualmente almacenadas en la guardería.
 
-Si para un tipo de embarcación no se dictó ningún curso debe mostrarse igualmente con 0 inscriptos y sin datos de la actividad 
+Si para un tipo de embarcación no se dictó ningún curso debe mostrarse igualmente con 0 inscriptos y sin datos de la actividad
 o curso y si no hay embarcaciones almacenadas actualmente de dicho tipo debe mostrarse con 0.
 
-Ordenar por cantidad de embarcaciones almacenadas descendente, cantidad de inscriptos ascendente y días desde que comenzó 
+Ordenar por cantidad de embarcaciones almacenadas descendente, cantidad de inscriptos ascendente y días desde que comenzó
 el curso ascendente
 
 */
 
-/*
-Embarcaciones almacenadas. La empresa ha detectado dificultad para identificar si las embarcaciones se encuentran almacenadas o no a la hora de cierre. Por este motivo se ha decidido agregar una columna “almacenada” en la tabla embarcación que refleje la situación y automatizar con triggers el estado de dicha columna.
 
-Se requiere:
-1- Crear una columna almacenada para reflejar el estado (utilizar el tipo de dato que crea apropiado).
-
-2- Cargar el valor inicial de la columna. Las embarcaciones que no tengan una salida 
-con fecha y hora de regreso real en null está almacenadas.
-
-3- A través del uso de triggers al registrar una nueva salida de una embarcación cambiar el valor de la 
-columna almacenada para reflejar que salió y al registrar una fecha y hora de regreso real reflejar que se encuentra almacenada.
-*/
-
--- //? Ejercicio 9 Parcial AD
--- //? Cursos Exitosos
 
 -- //* Primero se debe crear una tabla temporal para guardar todas las embarcaciones que estan almacenadas actualmente agrupadas por tipo de embarcacion
 
@@ -263,11 +251,11 @@ group by te.codigo, te.nombre;
 
 select * from embarcaciones_almacenadas;
 
--- //* Ahora tengo que calcular la cantidad de inscriptos por curso, actividad y tipo de embarcacion, para luego hacer 
+-- //* Ahora tengo que calcular la cantidad de inscriptos por curso, actividad y tipo de embarcacion, para luego hacer
 -- //* un maximo en la cantidad de inscriptos
 
 drop temporary table if exists inscriptos;
-create temporary table inscriptos as 
+create temporary table inscriptos as
 select cur.numero as numero_curso, cur.numero_actividad, count(ins.numero_socio) as cantidad_de_inscriptos
 from curso cur
 left join inscripcion ins on cur.numero = ins.numero_curso
@@ -276,16 +264,10 @@ group by cur.numero, cur.numero_actividad;
 select * from inscriptos;
 
 
-/* select distinct(te.codigo) as cod_tipo_em, te.nombre as nom_tipo_em, ins.numero_actividad, a.nombre, a.descripcion, ins.numero_curso, max(ins.cantidad_de_inscriptos), emal.cantidad_almacenadas
-from inscriptos ins
-inner join actividad a on ins.numero_actividad = a.numero
-inner join tipo_embarcacion te on a.codigo_tipo_embarcacion = te.codigo
-inner join embarcaciones_almacenadas emal on te.codigo = emal.codigo; */
-
 -- //* Teniendo la cantidad de inscriptos por curso y actividad, ahora voy a maxear esos inscriptos
 drop temporary table if exists cursos_mas_exitosos;
-create temporary table cursos_mas_exitosos as 
-select  te.codigo as cod_tipo_em, ins.numero_curso, ins.numero_actividad, max(ins.cantidad_de_inscriptos) as cantidad_inscriptos
+create temporary table cursos_mas_exitosos as
+select DISTINCT te.codigo as cod_tipo_em, ins.numero_curso, ins.numero_actividad, max(ins.cantidad_de_inscriptos) as cantidad_inscriptos
 from inscriptos ins
 inner join actividad a on ins.numero_actividad = a.numero
 inner join tipo_embarcacion te on a.codigo_tipo_embarcacion = te.codigo
@@ -293,9 +275,106 @@ group by cod_tipo_em, ins.numero_curso, ins.numero_actividad;
 
 select * from cursos_mas_exitosos;
 
-select DISTINCT cme.cod_tipo_em, te.nombre, cme.numero_actividad, a.nombre, a.descripcion, cme.numero_curso, TIMESTAMPDIFF(day, cu.fecha_inicio, cu.fecha_fin) as cantidad_dias , cme.cantidad_inscriptos, ea.cantidad_almacenadas
+
+select cme.cod_tipo_em, te.nombre, cme.numero_actividad, a.nombre, a.descripcion, cme.numero_curso, TIMESTAMPDIFF(day, cu.fecha_inicio, cu.fecha_fin) as cantidad_dias , cme.cantidad_inscriptos, ea.cantidad_almacenadas
 from cursos_mas_exitosos cme
 inner join actividad a on cme.numero_actividad = a.numero
 inner join tipo_embarcacion te on cme.cod_tipo_em = te.codigo
 inner join curso cu on cme.numero_curso = cu.numero
-inner join embarcaciones_almacenadas ea on cme.cod_tipo_em = ea.codigo;
+inner join embarcaciones_almacenadas ea on cme.cod_tipo_em = ea.codigo
+order by ea.cantidad_almacenadas desc, cme.cantidad_inscriptos asc, cantidad_dias asc;
+
+
+-- //? Ejercicio 2
+-- //? Embarcaciones almacenadas
+
+/*
+La empresa ha detectado dificultad para identificar si las embarcaciones se encuentran almacenadas o no a la hora de cierre.
+Por este motivo se ha decidido agregar una columna “almacenada” en la tabla embarcación que refleje la situación y
+automatizar con triggers el estado de dicha columna.
+
+Se requiere:
+1- Crear una columna almacenada para reflejar el estado (utilizar el tipo de dato que crea apropiado).
+
+2- Cargar el valor inicial de la columna. Las embarcaciones que no tengan una salida
+con fecha y hora de regreso real en null está almacenadas.
+
+3- A través del uso de triggers al registrar una nueva salida de una embarcación cambiar el valor de la
+columna almacenada para reflejar que salió y al registrar una fecha y hora de regreso real reflejar que se encuentra almacenada.
+*/
+
+-- //* Utilizo la sentencia DDL correspondiente para agregar la columna
+
+ALTER TABLE `embarcacion`
+ADD COLUMN `almacenada?` INT DEFAULT 1
+
+-- //! 1 = Almacenada | 0 = No almacenada
+
+
+-- //* Hago una transaccion en donde voy a hacer un update, para no complicarla voy a hacer 2 updates
+-- //* En uno le pongo 1 a las que estan almacenadas y en otro a las que estan afuera
+-- //* Para esto utilizaré las tablas embarcación y salidas con las clausulas in y not in
+
+start transaction;
+
+update embarcacion em
+set `almacenada?` = 1
+where em.hin not in (
+    select sa.hin
+    from salida sa
+    where fecha_hora_regreso_real > CURRENT_DATE()
+);
+
+update embarcacion em
+set `almacenada?` = 0
+where em.hin in (
+    select sa.hin
+    from salida sa
+    where fecha_hora_regreso_real > CURRENT_DATE()
+);
+
+commit;
+
+-- //* Ahora se agrega un trigger en la tabla salidas para que despues de que se inserte una salida,
+-- //* se modifique el valor almacenada? en la tabla embarcaciones segun el hin
+
+
+delimiter $$
+
+drop trigger if exists salida_after_ins_tr;
+create trigger salida_after_ins_tr after insert on salida for each row
+begin
+    update embarcacion em
+    set `almacenada?` = 0
+    where em.hin = new.hin;
+end $$
+
+drop trigger if exists salida_after_upd_tr;
+create trigger salida_after_upd_tr after update on salida for each row
+begin
+    update embarcacion em
+    set `almacenada?` = 1
+    where em.hin = new.hin;
+end $$
+
+delimiter ;
+
+start transaction;
+insert into salida(hin, fecha_hora_salida, fecha_hora_regreso_tentativo)
+values('ESP001', CURRENT_TIMESTAMP,  '2024-12-08');
+
+update salida
+set fecha_hora_regreso_real = CURRENT_TIMESTAMP
+where hin = 'ESP001' and fecha_hora_regreso_tentativo = '2024-12-08'
+
+ROLLBACK;
+commit;
+
+-- //! El trigger no contiene validacion de si es la fecha_regreso_real la que se ingresa ya que
+-- //! entiendo que no deberia ingresarse otro atributo en una salida
+/* 
+    * Cuando se ingresa una nueva salida se carga el hin, hora_salida_real y hora_regreso_tentativa
+    * se que existe la posibilidad de que el que carga los datos se confunda en algun campo pero entiendo
+    * que hasta que no haga un submit no se van a mandar los datos, por lo tanto, la unica vez que la tabla
+    * salida se upgadea es para agregar la hora_regreso_real
+*/

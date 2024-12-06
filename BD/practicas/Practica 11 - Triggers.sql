@@ -1,4 +1,4 @@
--- Active: 1721298484659@@127.0.0.1@3306@afatse
+ -- Active: 1721298484659@@127.0.0.1@3306@afatse
 -- //? TRIGGERS
 
 /* Ejercicio 1
