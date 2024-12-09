@@ -378,3 +378,82 @@ commit;
     * que hasta que no haga un submit no se van a mandar los datos, por lo tanto, la unica vez que la tabla
     * salida se upgadea es para agregar la hora_regreso_real
 */
+
+-- //? Ejercicio 3
+-- //? Embarcaciones con Mayor cantidad de salidas
+/* 
+    ? La empresa desea conocer para cada tipo de embarcación información sobre las embarcaciones con mayor cantidad de salidas. 
+    ? Se considera que la embarcación con mayor cantidad de salidas es la que tiene más registros en la tabla de salidas. 
+    ? Se requiere listar para cada tipo de embarcación la embarcación con mayor cantidad de salidas indicando: 
+    ? código y nombre del tipo de embarcación; HIN, nombre de la embarcación, cantidad de salidas que tuvo,
+    ? la fecha y hora de la última salida y porcentaje de salidas por cada tipo de embarcación tomando como referencia las
+    ? salidas en total registradas en el año 2024.
+*/
+
+-- //* Voy a crear una tabla en donde voy a tener las salidas con sus correspondientes atributos + el tipo de embarcación
+
+drop temporary table if exists cantidad_salidas;
+create temporary table cantidad_salidas as
+select te.codigo, em.hin, count(sa.fecha_hora_salida) as cantidad_salidas , max(sa.fecha_hora_salida) as ultima_salida
+from embarcacion em
+inner join tipo_embarcacion te on em.codigo_tipo_embarcacion = te.codigo
+left join salida sa on em.hin = sa.hin
+where YEAR(sa.fecha_hora_salida) = '2024'
+group by te.codigo, em.hin;
+
+drop temporary table if exists cantidad_salidas2;
+create temporary table cantidad_salidas2 as
+select te.codigo, em.hin, count(sa.fecha_hora_salida) as cantidad_salidas , max(sa.fecha_hora_salida) as ultima_salida
+from embarcacion em
+inner join tipo_embarcacion te on em.codigo_tipo_embarcacion = te.codigo
+left join salida sa on em.hin = sa.hin
+where YEAR(sa.fecha_hora_salida) = '2024'
+group by te.codigo, em.hin;
+
+set @cantidadSalidas = (
+    select count(*)
+    from salida sa
+    where YEAR(sa.fecha_hora_salida) = '2024'
+)
+
+drop temporary table if exists promedio_por_tipo;
+create temporary table promedio_por_tipo as
+select te.codigo, (count(*) / @cantidadSalidas * 100) as promedio_salidas_por_tipo
+from tipo_embarcacion te
+inner join embarcacion em on te.codigo = em.codigo_tipo_embarcacion
+left join salida sa on em.hin = sa.hin
+where YEAR(sa.fecha_hora_salida) = '2024'
+group by 1;
+
+select cs.codigo, te.nombre as nombre_tipo_embarcacion, cs.hin, em.nombre as nombre_embarcacion, cs.cantidad_salidas, cs.ultima_salida, ppt.promedio_salidas_por_tipo
+from cantidad_salidas cs
+inner join tipo_embarcacion te on cs.codigo = te.codigo
+inner join promedio_por_tipo ppt on te.codigo = ppt.codigo
+inner join embarcacion em on cs.hin = em.hin
+inner join (
+    select codigo, max(cantidad_salidas) as max_salidas
+    from cantidad_salidas2
+    group by codigo
+) as max_salidas_per_tipo on cs.codigo = max_salidas_per_tipo.codigo
+and cs.cantidad_salidas = max_salidas_per_tipo.max_salidas
+order by cs.codigo, cs.cantidad_salidas desc, cs.ultima_salida desc;
+
+
+-- //? Ejercicio 4
+-- //? Gestión de Mantenimiento de Embarcaciones
+/*
+    ? La empresa desea gestionar el mantenimiento de las embarcaciones. Para ello, se requiere crear una tabla para registrar 
+    ? los mantenimientos realizados a cada embarcación, y un procedimiento almacenado que permita registrar un nuevo mantenimiento. 
+    ? Además, se debe actualizar el estado de la embarcación a "En Mantenimiento" cuando se registre un nuevo mantenimiento y 
+    ? a "Disponible" cuando se complete el mantenimiento.
+*/
+
+-- //? Ejercicio 5
+-- //? Embarcaciones con Menor Cantidad de Salidas
+/* 
+    ? La empresa desea conocer para cada tipo de embarcación información sobre las embarcaciones con menor cantidad de salidas. 
+    ? Se considera que la embarcación con menor cantidad de salidas es la que tiene menos registros en la tabla de salidas. 
+    ? Se requiere listar para cada tipo de embarcación la embarcación con menor cantidad de salidas indicando: 
+    ? código y nombre del tipo de embarcación; HIN, nombre de la embarcación, cantidad de salidas que tuvo 
+    ? y la fecha y hora de la última salida.
+*/
