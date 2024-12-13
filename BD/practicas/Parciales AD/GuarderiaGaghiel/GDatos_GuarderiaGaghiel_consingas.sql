@@ -244,7 +244,7 @@ drop temporary table if exists embarcaciones_almacenadas;
 create temporary table embarcaciones_almacenadas as
 select te.codigo, te.nombre, count(distinct(sa.hin)) as cantidad_almacenadas
 from tipo_embarcacion te
-inner join embarcacion em on te.codigo = em.codigo_tipo_embarcacion
+left join embarcacion em on te.codigo = em.codigo_tipo_embarcacion
 inner join salida sa on em.hin = sa.hin
 where sa.fecha_hora_salida < CURRENT_DATE
 group by te.codigo, te.nombre;
@@ -448,6 +448,8 @@ order by cs.codigo, cs.cantidad_salidas desc, cs.ultima_salida desc;
     ? a "Disponible" cuando se complete el mantenimiento.
 */
 
+
+
 -- //? Ejercicio 5
 -- //? Embarcaciones con Menor Cantidad de Salidas
 /* 
@@ -457,3 +459,135 @@ order by cs.codigo, cs.cantidad_salidas desc, cs.ultima_salida desc;
     ? código y nombre del tipo de embarcación; HIN, nombre de la embarcación, cantidad de salidas que tuvo 
     ? y la fecha y hora de la última salida.
 */
+
+
+-- //? Ejercicio 6
+-- //? Embarcación de mayor almacenamiento por tipo de embarcación
+
+/* 
+    ? La empresa desea identificar a las embarcaciones que llevan más tiempo total almacenadas para cada tipo de embarcación. 
+    ? El total de horas de almacenamiento de cada embarcación se calcula como la sumatoria de las diferencia en horas entre la fecha y hora de fin de contrato 
+    ? y la fecha y hora de contrato (atención: en los contratos que no tienen aún fecha y hora de fin deberá usarse la actual). 
+    ? La embarcación con mayor hs totales será considerada como la de mayor almacenamiento. 
+    
+    ? Se requiere listar para cada tipo de embarcación la embarcación con más horas totales almacenadas, indicando: 
+    ? código y nombre del tipo de embarcación; hin y nombre de la embarcación; número y nombre del propietario, 
+    ? fecha de la primera vez que almacenó la embarcación, cantidad de horas totales de almacenamiento, y de las salidas con dicha embarcación la última 
+    ? fecha de salida en 2024 y la cantidad de salidas durante 2024.
+
+    ? Si una embarcación no tiene tiempo de almacenamiento indicar 0 en las horas totales.
+
+    ? Se deberán listar todos los tipos de embarcación y aún si no tienen ningún almacenamiento indicando 0.
+
+    ? Se deberá mostrar la embarcación con más tiempo de almacenamiento aún si no tuvo salidas indicando 0 en la cantidad de salidas.
+
+    ? Ordenar los datos por horas totales de almacenamiento descendente, fecha del primer almacenamiento ascendente y cantidad de salidas descendente.
+*/
+
+drop temporary table if exists tiempo_almacenamiento;
+create temporary table tiempo_almacenamiento as
+select em.hin, em.codigo_tipo_embarcacion ,ifnull(sum(TIMESTAMPDIFF(hour ,emca.fecha_hora_contrato, COALESCE(fecha_hora_baja_contrato, CURRENT_DATE()))), 0) as cant_horas_almacenamiento, min(emca.fecha_hora_contrato) as fecha_min
+from embarcacion em
+left join embarcacion_cama emca on em.hin = emca.hin
+group by em.hin, em.codigo_tipo_embarcacion;
+
+drop temporary table if exists tiempo_almacenamiento2;
+create temporary table tiempo_almacenamiento2 as
+select em.codigo_tipo_embarcacion ,ifnull(sum(TIMESTAMPDIFF(hour ,emca.fecha_hora_contrato, COALESCE(fecha_hora_baja_contrato, CURRENT_DATE()))), 0) as cant_horas_almacenamiento
+from embarcacion em
+left join embarcacion_cama emca on em.hin = emca.hin
+group by em.hin;
+
+drop temporary table if exists ult_salida_y_cant;
+create temporary table ult_salida_y_cant as
+select em.hin ,ifnull(max(sa.fecha_hora_salida), 0) as ult_salida , count(sa.fecha_hora_salida) as cant_salidas
+from embarcacion em
+left join salida sa on em.hin = sa.hin
+group by em.hin;
+
+
+select te.codigo, te.nombre, ta.hin, em.nombre, so.numero, so.nombre, ta.fecha_min, ta.cant_horas_almacenamiento, usc.ult_salida, usc.cant_salidas
+from embarcacion em
+inner join socio so on em.numero_socio = so.numero
+inner join tipo_embarcacion te on em.codigo_tipo_embarcacion = te.codigo
+inner join ult_salida_y_cant usc on em.hin = usc.hin
+inner join tiempo_almacenamiento ta on em.hin = ta.hin
+inner join (
+    select codigo_tipo_embarcacion, max(cant_horas_almacenamiento) as max_horas
+    from tiempo_almacenamiento2
+    group by codigo_tipo_embarcacion
+) as max_ta on ta.codigo_tipo_embarcacion = max_ta.codigo_tipo_embarcacion and ta.cant_horas_almacenamiento = max_ta.max_horas
+order by cant_horas_almacenamiento desc, fecha_min asc, cant_salidas desc;
+ 
+
+
+-- //? Ejercicio 7
+-- //? Estado camas
+/* 
+   ? La empresa ha decidido que necesita más información sobre el estado de las camas. 
+   ? Se decidió separar del estado la situación de uso en una nueva columna y mantener esta información actualizada por medio de triggers.
+   ? Se requiere:
+   ? Agregar en la tabla cama la columna en_uso (utilizar el tipo de dato apropiado).
+   ? Reflejar el valor de dicha columna según esta regla. 
+    ? Si tiene un contrato en embarcacion_cama sin fecha y hora de baja de contrato está en uso. Caso contrario no lo está.
+
+   ? A través del uso de triggers al registrar un nuevo contrato de una embarcación sin fecha y hora de baja de contrato cambiar el valor 
+   ? de la columna en_uso para reflejar que se encuentra utilizada y al registrar una fecha y hora de baja de contrato reflejar que se encuentra libre.
+   ? Usa los siguientes datos para probar
+*/
+
+ALTER TABLE `cama` ADD COLUMN `en_uso` VARCHAR(255) NOT NULL DEFAULT 'Si';
+
+update cama
+set en_uso = 'SI'
+where exists (
+    select 1
+    from embarcacion_cama ec
+    where ec.codigo_sector = cama.codigo_sector
+    and ec.numero_cama=cama.numero
+    and ec.fecha_hora_baja_contrato is null
+);
+
+
+delimiter $$
+drop trigger if exists embarcacion_cama_aft_ins_tr $$
+create trigger embarcacion_cama_aft_ins_tr after insert on embarcacion_cama
+for each row
+begin
+    update cama set en_uso= 'SI'
+    where cama.codigo_sector=new.codigo_sector
+    and cama.numero=new.numero_cama
+    and new.fecha_hora_baja_contrato is null;
+end; $$
+
+drop trigger if exists embarcacion_cama_aft_upd_tr $$
+create trigger embarcacion_cama_aft_upd_tr after update on embarcacion_cama
+for each row
+begin
+    update cama set en_uso= 'NO'
+    where cama.codigo_sector=new.codigo_sector
+    and cama.numero=new.numero_cama
+    and new.fecha_hora_baja_contrato is not null;
+end; $$
+delimiter ;
+
+start transaction;
+insert into embarcacion_cama values ('ESP010',2,8,now(),null);
+
+update embarcacion_cama set fecha_hora_baja_contrato=now() where hin='ESP010' and fecha_hora_baja_contrato is null;
+
+rollback;
+
+-- //? Ejercicio 8
+-- //? Gestión de Estado de Camas y Embarcaciones
+/*  
+    ? Requisitos:
+
+    ? Crear un procedimiento almacenado que inserte un nuevo contrato de una embarcación y 
+    ? actualice el estado de la cama correspondiente.
+
+    ? Crear un trigger que actualice el estado de la cama cuando se registre una fecha y hora de baja de contrato.
+
+*/
+
+
