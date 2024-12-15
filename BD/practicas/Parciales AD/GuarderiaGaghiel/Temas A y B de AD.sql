@@ -44,7 +44,8 @@ left join salida sal
     and sal.fecha_hora_salida between '20240101' and '20241201'
 group by te_alm.cod_tipo, te_alm.tipo, te_alm.hin, te_alm.emb, te_alm.numero_socio, te_alm.propietario,
 te_alm.desde, te_alm.hs_tot
-order by te_alm.hs_tot desc, te_alm.desde, salidas desc
+order by te_alm.hs_tot desc, te_alm.desde, salidas desc;
+
 /*
 ### AD.A2
 #### Enunciado
@@ -156,8 +157,9 @@ left join embarcacion e
     on te_ins.cod_tipo_emb=e.codigo_tipo_embarcacion
 left join emb_tipo
     on te.codigo=emb_tipo.cod_tipo_emb
-order by emb_tipo.cant_emb_almac desc, te_ins.insc, te_ins.dias_desde_inicio
-;
+order by emb_tipo.cant_emb_almac desc, te_ins.insc, te_ins.dias_desde_inicio;
+
+
 ### AD.B2
 #### Enunciado
 /*AD.B2- Embarcaciones almacenadas. La empresa ha detectado dificultad para identificar si las embarcaciones se encuentran almacenadas o 

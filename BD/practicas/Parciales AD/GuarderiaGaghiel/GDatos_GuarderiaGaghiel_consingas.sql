@@ -267,7 +267,7 @@ select * from inscriptos;
 -- //* Teniendo la cantidad de inscriptos por curso y actividad, ahora voy a maxear esos inscriptos
 drop temporary table if exists cursos_mas_exitosos;
 create temporary table cursos_mas_exitosos as
-select DISTINCT te.codigo as cod_tipo_em, ins.numero_curso, ins.numero_actividad, max(ins.cantidad_de_inscriptos) as cantidad_inscriptos
+select  te.codigo as cod_tipo_em, ins.numero_curso, ins.numero_actividad, max(ins.cantidad_de_inscriptos) as cantidad_inscriptos
 from inscriptos ins
 inner join actividad a on ins.numero_actividad = a.numero
 inner join tipo_embarcacion te on a.codigo_tipo_embarcacion = te.codigo
@@ -404,8 +404,8 @@ group by te.codigo, em.hin;
 drop temporary table if exists cantidad_salidas2;
 create temporary table cantidad_salidas2 as
 select te.codigo, em.hin, count(sa.fecha_hora_salida) as cantidad_salidas , max(sa.fecha_hora_salida) as ultima_salida
-from embarcacion em
-inner join tipo_embarcacion te on em.codigo_tipo_embarcacion = te.codigo
+from tipo_embarcacion te
+inner join embarcacion em on em.codigo_tipo_embarcacion = te.codigo
 left join salida sa on em.hin = sa.hin
 where YEAR(sa.fecha_hora_salida) = '2024'
 group by te.codigo, em.hin;
@@ -443,11 +443,64 @@ order by cs.codigo, cs.cantidad_salidas desc, cs.ultima_salida desc;
 -- //? Gestión de Mantenimiento de Embarcaciones
 /*
     ? La empresa desea gestionar el mantenimiento de las embarcaciones. Para ello, se requiere crear una tabla para registrar 
-    ? los mantenimientos realizados a cada embarcación, y un procedimiento almacenado que permita registrar un nuevo mantenimiento. 
-    ? Además, se debe actualizar el estado de la embarcación a "En Mantenimiento" cuando se registre un nuevo mantenimiento y 
+    ? los mantenimientos realizados a cada embarcación, y un procedimiento almacenado que permita registrar un nuevo mantenimiento.
+
+    ? Además, se requiere crear un procedimiento llamado 'actualizar_mantenimiento' que debe actualizar el estado de la embarcación 
     ? a "Disponible" cuando se complete el mantenimiento.
 */
 
+create table mantenimiento (
+    id int auto_increment primary key,
+    hin varchar(50) not null,
+    fecha_inicio datetime not null,
+    fecha_fin datetime,
+    estado varchar(50) not null,
+    foreign key (hin) references embarcacion(hin)
+);
+
+
+delimiter $$
+
+drop procedure if exists registrar_mantenimiento;
+
+create procedure registrar_mantenimiento(
+    in hin varchar(6),
+    in fecha_inicio date,
+    in fecha_fin date
+)
+begin
+    start transaction;
+
+        insert into mantenimiento(hin, fecha_inicio, fecha_fin, estado)
+        values(hin, fecha_inicio, fecha_fin, 'En mantenimiento');
+
+    commit;
+end 
+
+drop procedure if exists actualizar_mantenimiento;
+create procedure actualizar_mantenimiento()
+begin
+    start transaction;
+
+        drop temporary table if exists temp_hin;
+        create temporary table temp_hin as
+        select ma2.hin
+        from mantenimiento ma2
+        where ma2.fecha_fin > CURRENT_DATE();
+
+        update mantenimiento ma
+        set ma.estado = 'Disponible'
+        where ma.hin not in (select hin from temp_hin);
+
+    commit;
+end; 
+
+delimiter ;
+
+call registrar_mantenimiento('CAN001', '2024-12-15', '2024-12-20');
+call registrar_mantenimiento('CAN002', '2024-12-05', '2024-12-15');
+
+call actualizar_mantenimiento();
 
 
 -- //? Ejercicio 5
@@ -459,6 +512,26 @@ order by cs.codigo, cs.cantidad_salidas desc, cs.ultima_salida desc;
     ? código y nombre del tipo de embarcación; HIN, nombre de la embarcación, cantidad de salidas que tuvo 
     ? y la fecha y hora de la última salida.
 */
+
+drop temporary table if exists cantidad_salidas;
+create temporary table cantidad_salidas as
+select te.codigo, em.hin, count(sa.hin) as cantidad_salidas , max(sa.fecha_hora_salida) as ultima_salida
+from tipo_embarcacion te
+left join embarcacion em on te.codigo = em.codigo_tipo_embarcacion
+left join salida sa on em.hin = sa.hin
+group by te.codigo, em.hin;
+
+drop temporary table if exists em_min_salidas;
+create temporary table em_min_salidas as 
+select cs.codigo, cs.hin, min(cs.cantidad_salidas) as min
+from cantidad_salidas cs
+group by cs.codigo, cs.hin;
+
+select emin.codigo, te.nombre, emin.hin, emin.min, cs.ultima_salida
+from em_min_salidas emin
+inner join tipo_embarcacion te on emin.codigo = te.codigo
+inner join embarcacion em on emin.hin = em.hin
+inner join cantidad_salidas cs on emin.codigo = cs.codigo and emin.hin = cs.hin;
 
 
 -- //? Ejercicio 6
@@ -518,8 +591,6 @@ inner join (
     group by codigo_tipo_embarcacion
 ) as max_ta on ta.codigo_tipo_embarcacion = max_ta.codigo_tipo_embarcacion and ta.cant_horas_almacenamiento = max_ta.max_horas
 order by cant_horas_almacenamiento desc, fecha_min asc, cant_salidas desc;
- 
-
 
 -- //? Ejercicio 7
 -- //? Estado camas
@@ -547,7 +618,6 @@ where exists (
     and ec.numero_cama=cama.numero
     and ec.fecha_hora_baja_contrato is null
 );
-
 
 delimiter $$
 drop trigger if exists embarcacion_cama_aft_ins_tr $$
@@ -590,4 +660,24 @@ rollback;
 
 */
 
+DELIMITER $$
+USE guarderia_gaghiel$$
+CREATE DEFINER=root@localhost PROCEDURE nuevo_contrato(IN emb_hin varchar(11), IN sector INT, IN cama int)
+BEGIN
+start transaction;
+select t.cod_tipo_operacion  into @tipo from embarcacion e 
+inner join tipo_embarcacion t on t.codigo=e.codigo_tipo_embarcacion where e.hin = emb_hin;
+select s.cod_tipo_operacion into @sec from sector s where s.codigo = sector;
+if @tipo = @sec then
+    select en_uso into @uso from cama c where c.numero = cama and c.codigo_sector = sector;
+    if @uso = 'NO' then
+        INSERT INTO embarcacion_cama (hin, codigo_sector, numero_cama, fecha_hora_contrato) VALUES (emb_hin, sector, cama, now());
+end if;
+end if;
+COMMIT;
+END$$
+
+DELIMITER ;
+
+call nuevo_contrato('KAY002', 5, 3)
 
